@@ -1,0 +1,300 @@
+#include "Proiect.h"
+
+#include <vector>
+#include <iostream>
+#include <string>
+
+#include <Core/Engine.h>
+#include "Laboratoare/Laborator2/Laborator2.h"
+
+using namespace std;
+
+// Order of function calling can be seen in "Source/Core/World.cpp::LoopUpdate()"
+// https://github.com/UPB-Graphics/Framework-EGC/blob/master/Source/Core/World.cpp
+
+Proiect::Proiect()
+{
+}
+
+Proiect::~Proiect()
+{
+}
+
+void Proiect::Init()
+{
+	auto camera = GetSceneCamera();
+	camera->SetPositionAndRotation(glm::vec3(0, 10, 18), glm::quat(glm::vec3(-40 * TO_RADIANS, 0, 0)));
+	// camera->SetPositionAndRotation(glm::vec3(0, 0, 25), glm::quat(glm::vec3(0)));
+	camera->Update();
+
+	ToggleGroundPlane();
+
+	// Create a shader program for surface generation
+	{
+		Shader *shader = new Shader("SurfaceGeneration");
+		shader->AddShader("Source/Teme/Proiect/Shaders/VertexShader.glsl", GL_VERTEX_SHADER);
+		shader->AddShader("Source/Teme/Proiect/Shaders/GeometryShader.glsl", GL_GEOMETRY_SHADER);
+		shader->AddShader("Source/Teme/Proiect/Shaders/FragmentShader.glsl", GL_FRAGMENT_SHADER);
+		shader->CreateAndLink();
+		shaders[shader->GetName()] = shader;
+	}
+
+	// Textures shader
+	// Create a shader program for particle system
+	{
+		Shader *shader = new Shader("TextureShader");
+		shader->AddShader("Source/Teme/Proiect/Shaders/Texture.VS.glsl", GL_VERTEX_SHADER);
+		shader->AddShader("Source/Teme/Proiect/Shaders/Texture.FS.glsl", GL_FRAGMENT_SHADER);
+
+		shader->CreateAndLink();
+		shaders[shader->GetName()] = shader;
+	}
+
+	{
+		// Water plane
+		vector<VertexFormat> vertices
+		{
+			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
+			VertexFormat(glm::vec3(water_size, 0, -water_size), water_color),
+			VertexFormat(glm::vec3(-water_size, 0, -water_size), water_color),
+			VertexFormat(glm::vec3(-water_size, 0, water_size), water_color)
+		};
+
+		vector<unsigned short> indices =
+		{
+			0, 1, 3,
+			1, 2, 3
+		};
+
+		vector<glm::vec3> normals
+		{
+			glm::vec3(0, 1, 1),
+			glm::vec3(1, 0, 1),
+			glm::vec3(1, 0, 0),
+			glm::vec3(0, 1, 0)
+		};
+
+		vector<glm::vec2> textureCoords
+		{
+			glm::vec2(0.0f, 0.0f),
+			glm::vec2(0.0f, 1.0f),
+			glm::vec2(1.0f, 1.0f),
+			glm::vec2(1.0f, 0.0f)
+		};
+
+		meshes["water"] = new Mesh("water");
+		//meshes["water"]->InitFromData(vertices, normals, textureCoords, indices);
+		meshes["water"]->InitFromData(vertices, indices);
+		//meshes["water"]->SetDrawMode(GL_TRIANGLES);
+	}
+
+
+	// Create a bogus mesh with 2 points (a line)
+	{
+		vector<VertexFormat> vertices
+		{
+			VertexFormat(glm::vec3(-4.0, -2.5,  1.0), glm::vec3(0, 1, 0)),
+			VertexFormat(glm::vec3(-4.0, 5.5,  1.0), glm::vec3(0, 1, 0))
+		};
+
+		vector<unsigned short> indices =
+		{
+			0, 1
+		};
+
+		meshes["surface"] = new Mesh("generated initial surface points");
+		meshes["surface"]->InitFromData(vertices, indices);
+		meshes["surface"]->SetDrawMode(GL_LINES);
+	}
+
+	{
+		const string texture_loc = "Source/Teme/Proiect/Textures/";
+		// Load texture
+		ground_texture = TextureManager::LoadTexture(texture_loc + "dirt.jpg", nullptr, "ground", true, true);
+		river_texture = TextureManager::LoadTexture(texture_loc + "river.jpg", nullptr, "river", true, true);
+		// ground_texture = TextureManager::LoadTexture(RESOURCE_PATH::TEXTURES + "ground.jpg", nullptr, "image", true, true);
+		// ground_texture = TextureManager::LoadTexture(texture_loc + "dirt.jpg", nullptr, "image", true, true);
+		// Texture2D *texture = new Texture2D();
+		// ground_texture = new Texture2D();
+		// ground_texture->Load2D((texture_loc + "dirt.jpg").c_str(), GL_REPEAT);
+		// texture->Load2D((texture_loc + "dirt.jpg").c_str(), GL_REPEAT);
+		// mapTextures["ground"] = texture;
+	}
+}
+
+
+void Proiect::FrameStart()
+{
+	// clears the color buffer (using the previously set color) and depth buffer
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::ivec2 resolution = window->GetResolution();
+	// sets the screen area where to draw
+	glViewport(0, 0, resolution.x, resolution.y);
+}
+
+void Proiect::RenderMeshInstanced(Mesh *mesh, Shader *shader, const glm::mat4 &modelMatrix, Texture2D *texture)
+{
+	if (!mesh || !shader || !shader->GetProgramID())
+		return;
+
+	// render an object using the specified shader 
+	glUseProgram(shader->program);
+
+	// Bind model matrix
+	GLint loc_model_matrix = glGetUniformLocation(shader->program, "Model");
+	glUniformMatrix4fv(loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+	// Bind view matrix
+	glm::mat4 viewMatrix = GetSceneCamera()->GetViewMatrix();
+	int loc_view_matrix = glGetUniformLocation(shader->program, "View");
+	glUniformMatrix4fv(loc_view_matrix, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+	// Bind projection matrix
+	glm::mat4 projectionMatrix = GetSceneCamera()->GetProjectionMatrix();
+	int loc_projection_matrix = glGetUniformLocation(shader->program, "Projection");
+	glUniformMatrix4fv(loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture->GetTextureID());
+	glUniform1i(glGetUniformLocation(shader->program, "river_texture"), 1);
+
+	glUniform1f(glGetUniformLocation(shader->program, "time"), delta_time);
+
+	// Draw the object instanced
+	glBindVertexArray(mesh->GetBuffers()->VAO);
+	glDrawElementsInstanced(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_INT, (void*)0, 1);
+
+}
+
+void Proiect::RenderGround(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture) 
+{
+	if (!mesh || !shader || !shader->GetProgramID())
+		return;
+
+	// render an object using the specified shader and the specified position
+	glUseProgram(shader->program);
+
+	// Bind model matrix
+	GLint loc_model_matrix = glGetUniformLocation(shader->program, "Model");
+	glUniformMatrix4fv(loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+	// Bind view matrix
+	glm::mat4 viewMatrix = GetSceneCamera()->GetViewMatrix();
+	int loc_view_matrix = glGetUniformLocation(shader->program, "View");
+	glUniformMatrix4fv(loc_view_matrix, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+	// Bind projection matrix
+	glm::mat4 projectionMatrix = GetSceneCamera()->GetProjectionMatrix();
+	int loc_projection_matrix = glGetUniformLocation(shader->program, "Projection");
+	glUniformMatrix4fv(loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+	// Bind the texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture->GetTextureID());
+	glUniform1i(glGetUniformLocation(shader->program, "textureImage"), 0);
+
+	// Draw the object
+	glBindVertexArray(mesh->GetBuffers()->VAO);
+	glDrawElements(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_SHORT, 0);
+}
+
+
+void Proiect::Update(float deltaTimeSeconds)
+{
+	ClearScreen();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	delta_time += deltaTimeSeconds;
+
+	Shader *shader = shaders["SurfaceGeneration"];
+	shader->Use();
+
+	//send uniforms to shaders
+
+	//TODO 
+	//trimiteti la shadere numarul de puncte care aproximeaza o curba (no_of_generated_points)
+	// glUniform1i(glGetUniformLocation(shader->program, "no_of_generated_points"), no_of_generated_points);
+	//si caracteristici pentru crearea suprafetelor de translatie/rotatie (max_translate, max_rotate)
+	// glUniform1f(glGetUniformLocation(shader->program, "max_translate"), max_translate);
+	// glUniform1f(glGetUniformLocation(shader->program, "max_rotate"), max_rotate);
+
+	Mesh* mesh = meshes["surface"];
+	//draw the object instanced
+	RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
+
+	{
+		// Water texture
+		// RenderGround(meshes["water"], shaders["TextureShader"], glm::mat4(1), ground_texture);
+		RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
+	}
+
+}
+
+void Proiect::FrameEnd()
+{
+	//DrawCoordinatSystem();
+}
+
+// Read the documentation of the following functions in: "Source/Core/Window/InputController.h" or
+// https://github.com/UPB-Graphics/Framework-EGC/blob/master/Source/Core/Window/InputController.h
+
+void Proiect::OnInputUpdate(float deltaTime, int mods)
+{
+	// treat continuous update based on input
+};
+
+void Proiect::OnKeyPress(int key, int mods)
+{
+
+	//TODO 
+	//modificati numarul de instante si numarul de puncte generate
+	
+};
+
+void Proiect::OnKeyRelease(int key, int mods)
+{
+	// add key release event
+};
+
+void Proiect::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
+{
+	// add mouse move event
+	
+};
+
+void Proiect::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
+{
+	// add mouse button press event
+};
+
+void Proiect::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
+{
+	// add mouse button release event
+}
+
+void Proiect::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
+{
+	// treat mouse scroll event
+}
+
+void Proiect::OnWindowResize(int width, int height)
+{
+	// treat window resize event
+}
+
+glm::vec2 Proiect::WorldToScreenCoords(glm::vec3 current_point) {
+	glm::mat4 viewMatrix = GetSceneCamera()->GetViewMatrix();
+	glm::mat4 projectionMatrix = GetSceneCamera()->GetProjectionMatrix();
+	glm::ivec2 viewOffset = glm::ivec2(0);
+	glm::ivec2 viewSize = window->GetResolution();
+
+	glm::vec4 clipSpacePos = projectionMatrix * (viewMatrix * glm::vec4(current_point, 1.0));
+	glm::vec3 ndcSpacePos = glm::vec3(clipSpacePos.x, clipSpacePos.y, clipSpacePos.z) / clipSpacePos.w;
+	glm::vec2 windowSpacePos = glm::vec2(
+			((ndcSpacePos.x + 1.0) / 2.0) * viewSize.x + viewOffset.x,
+			((1.0 - ndcSpacePos.y) / 2.0) * viewSize.y + viewOffset.y
+		);
+	return windowSpacePos;
+}
