@@ -57,17 +57,27 @@ void Proiect::Init()
 			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
 			VertexFormat(glm::vec3(water_size, 0, -water_size), water_color),
 			VertexFormat(glm::vec3(-water_size, 0, -water_size), water_color),
-			VertexFormat(glm::vec3(-water_size, 0, water_size), water_color)
+			VertexFormat(glm::vec3(-water_size, 0, water_size), water_color),
+			VertexFormat(glm::vec3(2*water_size, 0, 2*water_size), water_color),
+			VertexFormat(glm::vec3(2*water_size, 0, water_size), water_color),
+			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
+			VertexFormat(glm::vec3(water_size, 0, 2*water_size), water_color)
 		};
 
 		vector<unsigned short> indices =
 		{
 			0, 1, 3,
-			1, 2, 3
+			1, 2, 3,
+			4, 5, 7,
+			5, 6, 7
 		};
 
 		vector<glm::vec3> normals
 		{
+			glm::vec3(0, 1, 1),
+			glm::vec3(1, 0, 1),
+			glm::vec3(1, 0, 0),
+			glm::vec3(0, 1, 0),
 			glm::vec3(0, 1, 1),
 			glm::vec3(1, 0, 1),
 			glm::vec3(1, 0, 0),
@@ -76,6 +86,10 @@ void Proiect::Init()
 
 		vector<glm::vec2> textureCoords
 		{
+			glm::vec2(0.0f, 0.0f),
+			glm::vec2(0.0f, 1.0f),
+			glm::vec2(1.0f, 1.0f),
+			glm::vec2(1.0f, 0.0f),
 			glm::vec2(0.0f, 0.0f),
 			glm::vec2(0.0f, 1.0f),
 			glm::vec2(1.0f, 1.0f),
@@ -168,7 +182,7 @@ void Proiect::RenderMeshInstanced(Mesh *mesh, Shader *shader, const glm::mat4 &m
 
 }
 
-void Proiect::RenderGround(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture) 
+void Proiect::RenderWater(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture) 
 {
 	if (!mesh || !shader || !shader->GetProgramID())
 		return;
@@ -220,14 +234,17 @@ void Proiect::Update(float deltaTimeSeconds)
 	// glUniform1f(glGetUniformLocation(shader->program, "max_translate"), max_translate);
 	// glUniform1f(glGetUniformLocation(shader->program, "max_rotate"), max_rotate);
 
-	Mesh* mesh = meshes["surface"];
+	//Mesh* mesh = meshes["surface"];
 	//draw the object instanced
-	RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
+	//RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
 
 	{
 		// Water texture
 		// RenderGround(meshes["water"], shaders["TextureShader"], glm::mat4(1), ground_texture);
-		RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
+		//RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
+		glUniform1f(glGetUniformLocation(shader->program, "time"), delta_time);
+		cout << delta_time<<endl;
+		RenderMesh(meshes["water"], shader, glm::mat4(1));
 	}
 
 }

@@ -1,59 +1,67 @@
 #version 430
-layout(lines) in;
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 170) out;
 
-layout(triangle_strip, max_vertices = 256) out;
+layout(location = 0) in vec3 g_color[];
 
 uniform mat4 View;
 uniform mat4 Projection;
-uniform vec3 control_p1, control_p2, control_p3, control_p4;
-uniform int no_of_instances;
 
-uniform int no_of_generated_points;
+//uniform int instances;
 
-uniform float river_thickness;
 uniform float time;
 
-in int instance[2];
+layout(location = 0) out vec3 f_color;
 
-out vec2 texcoord;
+const float PI = 3.1415926;
 
+const float wavelength = 50.0f;
+const float speed = 0.2f;
+const float amplitude = 5.0f;
 
-vec3 rotateY(vec3 point, float u)
+void EmitPoint(vec3 pos, vec3 offset)
 {
-	float x = point.x * cos(u) - point.z *sin(u);
-	float z = point.x * sin(u) + point.z *cos(u);
-	return vec3(x, point.y, z);
-}
-
-vec3 translateX(vec3 point, float t)
-{
-	return vec3(point.x + t, point.y, point.z);
-}
-
-vec3 bezier(float t)
-{
-	return control_p1 * pow((1 - t), 3) + control_p2 * 3 * t * pow((1 - t), 2) + control_p3 * 3 * pow(t, 2) * (1 - t) + control_p4 * pow(t, 3);
+	float k = 2 * PI / wavelength;
+	float f = k * (pos.x - speed * time * 100);
+	pos.x += amplitude * cos(f);
+	pos.y = amplitude * sin(f);
+	gl_Position = Projection * View * vec4(pos + offset, 1.0);
+	EmitVertex();
 }
 
 void main()
 {
+	vec3 p1 = gl_in[0].gl_Position.xyz;
+	vec3 p2 = gl_in[1].gl_Position.xyz;
+	vec3 p3 = gl_in[2].gl_Position.xyz;
+	//vec3 p4 = gl_in[3].gl_Position.xyz;
 
-	if (instance[0] < no_of_instances)
-	{
-		float flow_speed = -2.0f;
-		
-		for (int i = 0; i < no_of_generated_points; i++) {
-			float delta_current = 1.0 * i * 1 / no_of_generated_points;in_color = vec4(0,1,0,0); EmitVertex();
+	p2.y += 2;
 
-			gl_Position = Projection * View * vec4(translateX(bezier(delta_current), -river_thickness/2), 1);
-			texcoord = vec2(delta_current * time * flow_speed, 0.0f);
-			EmitVertex();
+	//p4.z += 5;
 
-			gl_Position = Projection * View * vec4(translateX(bezier(delta_current), river_thickness/2), 1);
-			texcoord = vec2(delta_current * time * flow_speed, 1.0f);
-			EmitVertex();
-		}
+
+
+	//for (int i = 0; i <= instances; i++)
+	//{
+		//TODO modify offset so that instances are displayed on 6 columns
+		vec3 offset = vec3(0, 0, 0);
+
+
+
+		//TODO modify the points so that the triangle shrinks relative to its center
+		f_color = g_color[0];
+		EmitPoint(p1, offset);
+
+		f_color = g_color[1];
+		EmitPoint(p2, offset);
+
+		f_color = g_color[2];
+		EmitPoint(p3, offset);
+
+		/*f_color = g_color[3];
+		EmitPoint(p4, offset);*/
 
 		EndPrimitive();
-	}
+	//}
 }

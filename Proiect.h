@@ -16,7 +16,7 @@ private:
 	void FrameEnd() override;
 
 	void RenderMeshInstanced(Mesh *mesh, Shader *shader, const glm::mat4 &modelMatrix, Texture2D *texture);
-	void RenderGround(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture);
+	void RenderWater(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture);
 
 	void OnInputUpdate(float deltaTime, int mods) override;
 	void OnKeyPress(int key, int mods) override;
@@ -34,6 +34,7 @@ protected:
 	//informatii suprafata generate
 	float water_size = 10.0f;
 	glm::vec3 water_color = glm::vec3(0, 0.2f, 0.7f);
+	int waves_count = 1;
 	// std::unordered_map<std::string, Texture2D*> mapTextures;
 	Texture2D *ground_texture;
 	Texture2D *river_texture;
