@@ -25,7 +25,11 @@ const float PI = 3.1415926;
 const float steepness = 0.5f;
 //const vec2 direction = vec2(1, 0.5f);
 
-vec3 gerstner(vec3 pos)
+// Fragment shader stuff for reflect/refract
+out vec3 world_position;
+out vec3 world_normal;
+
+vec3 gerstner(vec3 pos, vec3 normal)
 {
 	/*float k = 2 * PI / wavelength;
 	float c = sqrt(9.8 / k);
@@ -34,6 +38,8 @@ vec3 gerstner(vec3 pos)
 	float a = steepness / k;
 	return vec3(direction.x * (a * cos(f)), a*sin(f), direction.y*(a*cos(f)));*/
 	vec3 result_pos = pos;
+	vec3 tangent = vec3(0);
+	vec3 binormal = vec3(0);
 	for (int i = 0; i < waves_count; i++)
 	{
 		float k = 2 * PI / wavelength[i];
@@ -45,7 +51,17 @@ vec3 gerstner(vec3 pos)
 		result_pos.x += dir.x * (amplitude * cos(f));
 		result_pos.y = amplitude * sin(f);
 		result_pos.z += dir.y * (amplitude * cos(f));
+
+		tangent += vec3(
+			-dir.x * dir.x * (steepness * sin(f)),
+			dir.x * (steepness * cos(f)),
+			-dir.x * dir.y * (steepness * sin(f)));
+		binormal += vec3(
+			-dir.x * dir.y * (steepness * sin(f)),
+			dir.y * (steepness * cos(f)),
+			-dir.y * dir.y * (steepness * sin(f)));
 	}
+	normal = normalize(cross(binormal, tangent));
 	return result_pos;
 	/*float dir = dot(pos.xz, direction);
 	float w = 2 * PI / wavelength;
@@ -61,7 +77,9 @@ void EmitPoint(vec3 pos, vec3 offset)
 	float f = k * (pos.x - speed * time * 100);
 	pos.x += amplitude * cos(f);
 	pos.y = amplitude * sin(f);*/
-	gl_Position = Projection * View * vec4(gerstner(pos), 1.0);
+	vec3 new_pos = gerstner(pos, world_normal);
+	gl_Position = Projection * View * vec4(new_pos, 1.0);
+	world_position = new_pos;
 	EmitVertex();
 }
 
@@ -72,7 +90,7 @@ void main()
 	vec3 p3 = gl_in[2].gl_Position.xyz;
 	//vec3 p4 = gl_in[3].gl_Position.xyz;
 
-	p2.y += 2;
+	//p2.y += 2;
 
 	//p4.z += 5;
 

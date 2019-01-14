@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <stb/stb_image.h>
 
 #include <Core/Engine.h>
 #include "Laboratoare/Laborator2/Laborator2.h"
@@ -24,11 +25,13 @@ Proiect::~Proiect()
 void Proiect::Init()
 {
 	auto camera = GetSceneCamera();
-	camera->SetPositionAndRotation(glm::vec3(0, 20, 48), glm::quat(glm::vec3(-40 * TO_RADIANS, 0, 0)));
+	camera->SetPositionAndRotation(glm::vec3(0, 4, 4), glm::quat(glm::vec3(-30 * TO_RADIANS, 0, 0)));
+	//camera->SetPositionAndRotation(glm::vec3(0, 20, 48), glm::quat(glm::vec3(-40 * TO_RADIANS, 0, 0)));
 	// camera->SetPositionAndRotation(glm::vec3(0, 0, 25), glm::quat(glm::vec3(0)));
 	camera->Update();
 
 	srand(time(NULL));
+	std::string texturePath = RESOURCE_PATH::TEXTURES + "Cube/";
 
 	ToggleGroundPlane();
 
@@ -38,6 +41,15 @@ void Proiect::Init()
 		shader->AddShader("Source/Teme/Proiect/Shaders/VertexShader.glsl", GL_VERTEX_SHADER);
 		shader->AddShader("Source/Teme/Proiect/Shaders/GeometryShader.glsl", GL_GEOMETRY_SHADER);
 		shader->AddShader("Source/Teme/Proiect/Shaders/FragmentShader.glsl", GL_FRAGMENT_SHADER);
+		shader->CreateAndLink();
+		shaders[shader->GetName()] = shader;
+	}
+
+	// CubeMap shader
+	{
+		Shader *shader = new Shader("CubeMap");
+		shader->AddShader("Source/Teme/Proiect/Shaders/CubeMap.VS.glsl", GL_VERTEX_SHADER);
+		shader->AddShader("Source/Teme/Proiect/Shaders/CubeMap.FS.glsl", GL_FRAGMENT_SHADER);
 		shader->CreateAndLink();
 		shaders[shader->GetName()] = shader;
 	}
@@ -52,6 +64,15 @@ void Proiect::Init()
 		shader->CreateAndLink();
 		shaders[shader->GetName()] = shader;
 	}
+
+	cubeMapTextureID = UploadCubeMapTexture(
+		texturePath + "posx.png",
+		texturePath + "posy.png",
+		texturePath + "posz.png",
+		texturePath + "negx.png",
+		texturePath + "negy.png",
+		texturePath + "negz.png"
+	);
 
 	{
 		// Water plane
@@ -110,10 +131,16 @@ void Proiect::Init()
 		//wavelength.push_back(50.0f);
 		for (int i = 0; i < waves_count; i++) {
 			directions.push_back(glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10));
-			wavelength.push_back((float)(rand() % 40 + 10));
+			wavelength.push_back((float)(rand() % 10 + 10));
 		}
 	}
 
+	{
+		Mesh* mesh = new Mesh("cube");
+		mesh->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "box.obj");
+		mesh->UseMaterials(false);
+		meshes[mesh->GetMeshID()] = mesh;
+	}
 
 	// Create a bogus mesh with 2 points (a line)
 	{
@@ -134,10 +161,10 @@ void Proiect::Init()
 	}
 
 	{
-		const string texture_loc = "Source/Teme/Proiect/Textures/";
+		// const string texture_loc = "Source/Teme/Proiect/Textures/";
 		// Load texture
-		ground_texture = TextureManager::LoadTexture(texture_loc + "dirt.jpg", nullptr, "ground", true, true);
-		river_texture = TextureManager::LoadTexture(texture_loc + "river.jpg", nullptr, "river", true, true);
+		// ground_texture = TextureManager::LoadTexture(texture_loc + "dirt.jpg", nullptr, "ground", true, true);
+		// river_texture = TextureManager::LoadTexture(texture_loc + "river.jpg", nullptr, "river", true, true);
 		// ground_texture = TextureManager::LoadTexture(RESOURCE_PATH::TEXTURES + "ground.jpg", nullptr, "image", true, true);
 		// ground_texture = TextureManager::LoadTexture(texture_loc + "dirt.jpg", nullptr, "image", true, true);
 		// Texture2D *texture = new Texture2D();
@@ -148,6 +175,58 @@ void Proiect::Init()
 	}
 }
 
+unsigned int Proiect::UploadCubeMapTexture(const std::string &posx, const std::string &posy, const std::string &posz, const std::string& negx, const std::string& negy, const std::string& negz)
+{
+	int width, height, chn;
+
+	unsigned char* data_posx = stbi_load(posx.c_str(), &width, &height, &chn, 0);
+	unsigned char* data_posy = stbi_load(posy.c_str(), &width, &height, &chn, 0);
+	unsigned char* data_posz = stbi_load(posz.c_str(), &width, &height, &chn, 0);
+	unsigned char* data_negx = stbi_load(negx.c_str(), &width, &height, &chn, 0);
+	unsigned char* data_negy = stbi_load(negy.c_str(), &width, &height, &chn, 0);
+	unsigned char* data_negz = stbi_load(negz.c_str(), &width, &height, &chn, 0);
+
+	// TODO - create OpenGL texture
+	unsigned int textureID = 0;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	// TODO - bind the texture
+
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	float maxAnisotropy;
+	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	// TODO - load texture information for each face
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data_posx);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data_posy);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data_posz);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data_negx);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data_negy);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data_negz);
+
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+	// free memory
+	SAFE_FREE(data_posx);
+	SAFE_FREE(data_posy);
+	SAFE_FREE(data_posz);
+	SAFE_FREE(data_negx);
+	SAFE_FREE(data_negy);
+	SAFE_FREE(data_negz);
+
+	return textureID;
+}
 
 void Proiect::FrameStart()
 {
@@ -233,6 +312,29 @@ void Proiect::Update(float deltaTimeSeconds)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	delta_time += deltaTimeSeconds;
+
+	auto camera = GetSceneCamera();
+
+	// draw the cubemap
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	{
+		Shader *shader = shaders["CubeMap"];
+		shader->Use();
+
+		glm::mat4 modelMatrix = glm::scale(glm::mat4(1), glm::vec3(30));
+
+		glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(shader->loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureID);
+		int loc_texture = shader->GetUniformLocation("texture_cubemap");
+		glUniform1i(loc_texture, 0);
+
+		meshes["cube"]->Render();
+		//RenderMesh(meshes["cube"], shader, glm::mat4(1));
+	}
 
 	Shader *shader = shaders["SurfaceGeneration"];
 	shader->Use();
