@@ -131,7 +131,7 @@ void Proiect::Init()
 		//wavelength.push_back(50.0f);
 		for (int i = 0; i < waves_count; i++) {
 			directions.push_back(glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10));
-			wavelength.push_back((float)(rand() % 10 + 10));
+			wavelength.push_back((float)(rand() % 10 + 1));
 		}
 	}
 
@@ -366,7 +366,8 @@ void Proiect::Update(float deltaTimeSeconds)
 		//glUniform1f(glGetUniformLocation(shader->program, "wavelength"), wavelength[0]);
 		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
 		glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
-		cout << delta_time<< directions[0] << directions[1] << wavelength[0] << endl;
+		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
+		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 	}
 
