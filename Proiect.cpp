@@ -380,9 +380,9 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
 		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
-		//RenderMesh(meshes["water"], shader, glm::mat4(1));
-		RenderMesh(meshes["test"], shader, glm::mat4(1));
-		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
+		RenderMesh(meshes["water"], shader, glm::mat4(1));
+		//RenderMesh(meshes["test"], shader, glm::mat4(1));
+		//RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
 	}
 
 }

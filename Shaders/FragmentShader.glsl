@@ -114,8 +114,10 @@ void main()
 	//out_color = vec4(0, 0.2f, 0.7f, 0);
 	//out_color = phong(world_position, world_normal);
 	//out_color = vec4(world_position, 1);
-	out_color = phong2();
-	//out_color = vec4(world_normal, 1);
+
+
+	//out_color = phong2(); // Best one
+	out_color = vec4(world_normal, 1);
 
 	/*if (world_normal.xyz == vec3(0))
 		out_color = vec4(0, 1, 0, 1);*/

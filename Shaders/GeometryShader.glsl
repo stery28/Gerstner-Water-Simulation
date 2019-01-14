@@ -91,9 +91,9 @@ void EmitPoint(vec3 pos, vec3 offset, vec3 normal)
 	float f = k * (pos.x - speed * time * 100);
 	pos.x += amplitude * cos(f);
 	pos.y = amplitude * sin(f);*/
-	//vec3 new_pos = gerstner(pos, world_normal);
-	vec3 new_pos = pos;
-	world_normal = normal;
+	vec3 new_pos = gerstner(pos, world_normal);
+	//vec3 new_pos = pos;
+	//world_normal = normal;
 	gl_Position = Projection * View * vec4(new_pos, 1.0);
 	world_position = new_pos;
 	EmitVertex();
