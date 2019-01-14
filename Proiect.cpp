@@ -110,7 +110,7 @@ void Proiect::Init()
 		//wavelength.push_back(50.0f);
 		for (int i = 0; i < waves_count; i++) {
 			directions.push_back(glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10));
-			wavelength.push_back((float)(rand() % 40 + 10));
+			wavelength.push_back((float)(rand() % 10 + 10));
 		}
 	}
 
