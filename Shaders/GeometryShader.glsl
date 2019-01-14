@@ -10,22 +10,53 @@ uniform mat4 Projection;
 //uniform int instances;
 
 uniform float time;
+uniform float waves_count;
+uniform vec2 directions[];
+//uniform float steepness[];
+uniform float wavelength[];
 
 layout(location = 0) out vec3 f_color;
 
 const float PI = 3.1415926;
 
-const float wavelength = 50.0f;
-const float speed = 0.2f;
-const float amplitude = 5.0f;
+//const float wavelength = 50.0f;
+//const float speed = 0.2f;
+//const float amplitude = 5.0f;
+const float steepness = 0.5f;
+//const vec2 direction = vec2(1, 0.5f);
+
+vec3 gerstner(vec3 pos, int index)
+{
+	/*float k = 2 * PI / wavelength;
+	float c = sqrt(9.8 / k);
+	vec2 direction = normalize(vec2(1, 0));
+	float f = k * (dot(direction, pos.xz), -c * time);
+	float a = steepness / k;
+	return vec3(direction.x * (a * cos(f)), a*sin(f), direction.y*(a*cos(f)));*/
+	float k = 2 * PI / wavelength;
+	float speed = sqrt(9.8 / k);
+	float amplitude = steepness / k;
+	vec2 dir = normalize(direction);
+	float f = k * (dot(dir, pos.xz) - speed * time);
+	pos.x += dir.x * (amplitude * cos(f));
+	pos.y = amplitude * sin(f);
+	pos.z += dir.y * (amplitude * cos(f));
+	return pos;
+	/*float dir = dot(pos.xz, direction);
+	float w = 2 * PI / wavelength;
+	float C = cos(w*dir + time * 100);
+	float S = sin(w*dir + time * 100);
+
+	return vec3(pos.x + steepness * amplitude*C*direction.x, amplitude*S, pos.z + steepness * amplitude*C*direction.y);*/
+}
 
 void EmitPoint(vec3 pos, vec3 offset)
 {
-	float k = 2 * PI / wavelength;
+	/*float k = 2 * PI / wavelength;
 	float f = k * (pos.x - speed * time * 100);
 	pos.x += amplitude * cos(f);
-	pos.y = amplitude * sin(f);
-	gl_Position = Projection * View * vec4(pos + offset, 1.0);
+	pos.y = amplitude * sin(f);*/
+	gl_Position = Projection * View * vec4(gerstner(pos), 1.0);
 	EmitVertex();
 }
 

@@ -34,7 +34,11 @@ protected:
 	//informatii suprafata generate
 	float water_size = 10.0f;
 	glm::vec3 water_color = glm::vec3(0, 0.2f, 0.7f);
-	int waves_count = 1;
+	int waves_count = 5;
+	vector<glm::vec2> directions;
+	vector<float> steepness;
+	vector<float> wavelength;
+	//TODO: Add multiple configs
 	// std::unordered_map<std::string, Texture2D*> mapTextures;
 	Texture2D *ground_texture;
 	Texture2D *river_texture;

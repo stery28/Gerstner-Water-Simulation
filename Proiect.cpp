@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <stdlib.h>
 
 #include <Core/Engine.h>
 #include "Laboratoare/Laborator2/Laborator2.h"
@@ -26,6 +27,8 @@ void Proiect::Init()
 	camera->SetPositionAndRotation(glm::vec3(0, 10, 18), glm::quat(glm::vec3(-40 * TO_RADIANS, 0, 0)));
 	// camera->SetPositionAndRotation(glm::vec3(0, 0, 25), glm::quat(glm::vec3(0)));
 	camera->Update();
+
+	srand(time(NULL));
 
 	ToggleGroundPlane();
 
@@ -98,8 +101,15 @@ void Proiect::Init()
 
 		meshes["water"] = new Mesh("water");
 		//meshes["water"]->InitFromData(vertices, normals, textureCoords, indices);
-		meshes["water"]->InitFromData(vertices, indices);
+		//meshes["water"]->InitFromData(vertices, indices);
+		meshes["water"]->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "plane50.obj");
+		meshes["water"]->UseMaterials(false);
 		//meshes["water"]->SetDrawMode(GL_TRIANGLES);
+
+		for (i = 0; i < waves_count; i++) {
+			directions.push_back(glm::vec2(rand() % 21 / 10 - 1, rand() % 21 / 10 - 1));
+			wavelength.push_back(rand() % 40 + 10);
+		}
 	}
 
 
@@ -243,6 +253,8 @@ void Proiect::Update(float deltaTimeSeconds)
 		// RenderGround(meshes["water"], shaders["TextureShader"], glm::mat4(1), ground_texture);
 		//RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
 		glUniform1f(glGetUniformLocation(shader->program, "time"), delta_time);
+		glUniform1f(glGetUniformLocation(shader->program, "waves_count"), waves_count);
+		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, directions)
 		cout << delta_time<<endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 	}
