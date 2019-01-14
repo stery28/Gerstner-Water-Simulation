@@ -258,12 +258,12 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform1i(glGetUniformLocation(shader->program, "waves_count"), waves_count);
 		for (int i = 0; i < waves_count; i++)
 		{
-			glUniform2fv(glGetUniformLocation(shader->program, "directions"), 1, glm::value_ptr(directions[i]));
+			//glUniform2fv(glGetUniformLocation(shader->program, "directions"), 1, glm::value_ptr(directions[i]));
 			//glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), 1, &wavelength[i]);
 		}
-		glUniform1f(glGetUniformLocation(shader->program, "wavelength"), wavelength[0]);
-		//glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
-		//glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
+		//glUniform1f(glGetUniformLocation(shader->program, "wavelength"), wavelength[0]);
+		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
+		glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
 		cout << delta_time<< directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 	}

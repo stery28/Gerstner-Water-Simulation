@@ -11,9 +11,9 @@ uniform mat4 Projection;
 
 uniform float time;
 uniform int waves_count;
-uniform vec2 directions[];
+uniform vec2 directions[10];
 //uniform float steepness[];
-uniform float wavelength;
+uniform float wavelength[10];
 
 layout(location = 0) out vec3 f_color;
 
@@ -34,13 +34,13 @@ vec3 gerstner(vec3 pos)
 	float a = steepness / k;
 	return vec3(direction.x * (a * cos(f)), a*sin(f), direction.y*(a*cos(f)));*/
 	vec3 result_pos = pos;
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < waves_count; i++)
 	{
-		float k = 2 * PI / wavelength;
+		float k = 2 * PI / wavelength[i];
 		float speed = sqrt(9.8 / k);
 		float amplitude = steepness / k;
 		int j = 0;
-		vec2 dir = normalize(directions[0]);
+		vec2 dir = normalize(directions[i]);
 		float f = k * (dot(dir, pos.xz) - speed * time);
 		result_pos.x += dir.x * (amplitude * cos(f));
 		result_pos.y = amplitude * sin(f);
