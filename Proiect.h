@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Component/SimpleScene.h>
+#include <vector>
 
 class Proiect : public SimpleScene
 {
@@ -35,9 +36,9 @@ protected:
 	float water_size = 10.0f;
 	glm::vec3 water_color = glm::vec3(0, 0.2f, 0.7f);
 	int waves_count = 5;
-	vector<glm::vec2> directions;
-	vector<float> steepness;
-	vector<float> wavelength;
+	std::vector<glm::vec2> directions = std::vector<glm::vec2>();// = new std::vector<glm::vec2>();
+	std::vector<float> steepness = std::vector<float>();// = new std::vector<float>();
+	std::vector<float> wavelength = std::vector<float>();// = new std::vector<float>();
 	//TODO: Add multiple configs
 	// std::unordered_map<std::string, Texture2D*> mapTextures;
 	Texture2D *ground_texture;

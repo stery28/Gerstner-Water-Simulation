@@ -106,7 +106,9 @@ void Proiect::Init()
 		meshes["water"]->UseMaterials(false);
 		//meshes["water"]->SetDrawMode(GL_TRIANGLES);
 
-		for (i = 0; i < waves_count; i++) {
+		directions.push_back(glm::vec2(1, 0.5f));
+		wavelength.push_back(50.0f);
+		for (int i = 1; i < waves_count; i++) {
 			directions.push_back(glm::vec2(rand() % 21 / 10 - 1, rand() % 21 / 10 - 1));
 			wavelength.push_back(rand() % 40 + 10);
 		}
@@ -254,7 +256,8 @@ void Proiect::Update(float deltaTimeSeconds)
 		//RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
 		glUniform1f(glGetUniformLocation(shader->program, "time"), delta_time);
 		glUniform1f(glGetUniformLocation(shader->program, "waves_count"), waves_count);
-		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, directions)
+		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
+		glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
 		cout << delta_time<<endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 	}

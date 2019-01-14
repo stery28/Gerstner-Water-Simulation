@@ -25,7 +25,7 @@ const float PI = 3.1415926;
 const float steepness = 0.5f;
 //const vec2 direction = vec2(1, 0.5f);
 
-vec3 gerstner(vec3 pos, int index)
+vec3 gerstner(vec3 pos)
 {
 	/*float k = 2 * PI / wavelength;
 	float c = sqrt(9.8 / k);
@@ -33,15 +33,19 @@ vec3 gerstner(vec3 pos, int index)
 	float f = k * (dot(direction, pos.xz), -c * time);
 	float a = steepness / k;
 	return vec3(direction.x * (a * cos(f)), a*sin(f), direction.y*(a*cos(f)));*/
-	float k = 2 * PI / wavelength;
-	float speed = sqrt(9.8 / k);
-	float amplitude = steepness / k;
-	vec2 dir = normalize(direction);
-	float f = k * (dot(dir, pos.xz) - speed * time);
-	pos.x += dir.x * (amplitude * cos(f));
-	pos.y = amplitude * sin(f);
-	pos.z += dir.y * (amplitude * cos(f));
-	return pos;
+	vec3 result_pos = pos;
+	for (int i = 0; i < 1; i++)
+	{
+		float k = 2 * PI / wavelength[i];
+		float speed = sqrt(9.8 / k);
+		float amplitude = steepness / k;
+		vec2 dir = normalize(directions[i]);
+		float f = k * (dot(dir, pos.xz) - speed * time);
+		result_pos.x += dir.x * (amplitude * cos(f));
+		result_pos.y = amplitude * sin(f);
+		result_pos.z += dir.y * (amplitude * cos(f));
+	}
+	return result_pos;
 	/*float dir = dot(pos.xz, direction);
 	float w = 2 * PI / wavelength;
 	float C = cos(w*dir + time * 100);
