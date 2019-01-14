@@ -81,19 +81,19 @@ void Proiect::Init()
 			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
 			VertexFormat(glm::vec3(water_size, 0, -water_size), water_color),
 			VertexFormat(glm::vec3(-water_size, 0, -water_size), water_color),
-			VertexFormat(glm::vec3(-water_size, 0, water_size), water_color),
-			VertexFormat(glm::vec3(2*water_size, 0, 2*water_size), water_color),
+			VertexFormat(glm::vec3(-water_size, 0, water_size), water_color)
+			/*VertexFormat(glm::vec3(2*water_size, 0, 2*water_size), water_color),
 			VertexFormat(glm::vec3(2*water_size, 0, water_size), water_color),
 			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
-			VertexFormat(glm::vec3(water_size, 0, 2*water_size), water_color)
+			VertexFormat(glm::vec3(water_size, 0, 2*water_size), water_color)*/
 		};
 
 		vector<unsigned short> indices =
 		{
 			0, 1, 3,
-			1, 2, 3,
-			4, 5, 7,
-			5, 6, 7
+			1, 2, 3
+			/*4, 5, 7,
+			5, 6, 7*/
 		};
 
 		vector<glm::vec3> normals
@@ -101,11 +101,11 @@ void Proiect::Init()
 			glm::vec3(0, 1, 1),
 			glm::vec3(1, 0, 1),
 			glm::vec3(1, 0, 0),
-			glm::vec3(0, 1, 0),
-			glm::vec3(0, 1, 1),
+			glm::vec3(0, 1, 0)
+			/*glm::vec3(0, 1, 1),
 			glm::vec3(1, 0, 1),
 			glm::vec3(1, 0, 0),
-			glm::vec3(0, 1, 0)
+			glm::vec3(0, 1, 0)*/
 		};
 
 		vector<glm::vec2> textureCoords
@@ -113,16 +113,19 @@ void Proiect::Init()
 			glm::vec2(0.0f, 0.0f),
 			glm::vec2(0.0f, 1.0f),
 			glm::vec2(1.0f, 1.0f),
-			glm::vec2(1.0f, 0.0f),
-			glm::vec2(0.0f, 0.0f),
+			glm::vec2(1.0f, 0.0f)
+			/*glm::vec2(0.0f, 0.0f),
 			glm::vec2(0.0f, 1.0f),
 			glm::vec2(1.0f, 1.0f),
-			glm::vec2(1.0f, 0.0f)
+			glm::vec2(1.0f, 0.0f)*/
 		};
 
 		meshes["water"] = new Mesh("water");
+		meshes["test"] = new Mesh("test");
 		//meshes["water"]->InitFromData(vertices, normals, textureCoords, indices);
-		//meshes["water"]->InitFromData(vertices, indices);
+		//meshes["test"]->InitFromData(vertices, indices);
+		meshes["test"]->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "box.obj");
+
 		meshes["water"]->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "plane50.obj");
 		meshes["water"]->UseMaterials(false);
 		//meshes["water"]->SetDrawMode(GL_TRIANGLES);
@@ -138,6 +141,13 @@ void Proiect::Init()
 	{
 		Mesh* mesh = new Mesh("cube");
 		mesh->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "box.obj");
+		mesh->UseMaterials(false);
+		meshes[mesh->GetMeshID()] = mesh;
+	}
+
+	{
+		Mesh* mesh = new Mesh("sphere");
+		mesh->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "sphere.obj");
 		mesh->UseMaterials(false);
 		meshes[mesh->GetMeshID()] = mesh;
 	}
@@ -368,8 +378,11 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
 		glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
 		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
+		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
-		RenderMesh(meshes["water"], shader, glm::mat4(1));
+		//RenderMesh(meshes["water"], shader, glm::mat4(1));
+		RenderMesh(meshes["test"], shader, glm::mat4(1));
+		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
 	}
 
 }
@@ -385,13 +398,28 @@ void Proiect::FrameEnd()
 void Proiect::OnInputUpdate(float deltaTime, int mods)
 {
 	// treat continuous update based on input
+	float speed = 10;
+	if (!window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
+		if (window->KeyHold(GLFW_KEY_W)) {
+			light_position -= glm::vec3(0, 0, 1) * deltaTime * speed;
+		}
+
+		if (window->KeyHold(GLFW_KEY_S)) {
+			light_position += glm::vec3(0, 0, 1) * deltaTime * speed;
+		}
+
+		if (window->KeyHold(GLFW_KEY_A)) {
+			light_position -= glm::vec3(1, 0, 0) * deltaTime * speed;
+		}
+
+		if (window->KeyHold(GLFW_KEY_D)) {
+			light_position += glm::vec3(1, 0, 0) * deltaTime * speed;
+		}
+	}
 };
 
 void Proiect::OnKeyPress(int key, int mods)
 {
-
-	//TODO 
-	//modificati numarul de instante si numarul de puncte generate
 	
 };
 

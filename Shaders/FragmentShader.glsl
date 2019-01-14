@@ -5,11 +5,12 @@ layout(location = 0) in vec3 f_color;
 uniform sampler2D texture_1;
 uniform samplerCube texture_cubemap;
 uniform vec3 camera_position;
+uniform vec3 light_position;
 
 in vec3 world_position;
 in vec3 world_normal;
 
-const vec3 light_position = vec3(1, 7, 0);
+//const vec3 light_position = vec3(10, 7, 0);
 const vec3 light_color = vec3(0.1f);
 const float light_radius = 30.0f;
 
@@ -27,7 +28,7 @@ vec4 phong2() {
 	vec3 V = normalize(camera_position - world_position);
 	vec3 H = normalize(L + V);
 	//vec3 diffuse = ld * light_color * max(N * L, 0);
-	vec3 diffuse = vec3(0, 0.2f, 0.7f);
+	vec3 diffuse = Color;
 	float intensity = max(dot(N, L), 0);
 	vec3 specular = vec3(0);
 	if (intensity > 0)
@@ -114,7 +115,7 @@ void main()
 	//out_color = phong(world_position, world_normal);
 	//out_color = vec4(world_position, 1);
 	out_color = phong2();
-	out_color = vec4(world_normal, 1);
+	//out_color = vec4(world_normal, 1);
 
 	/*if (world_normal.xyz == vec3(0))
 		out_color = vec4(0, 1, 0, 1);*/

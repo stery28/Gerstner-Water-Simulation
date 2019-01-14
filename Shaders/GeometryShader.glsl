@@ -26,6 +26,7 @@ const float steepness = 0.5f;
 //const vec2 direction = vec2(1, 0.5f);
 
 // Fragment shader stuff for reflect/refract
+in vec3 w_normal[];
 out vec3 world_position;
 out vec3 world_normal;
 
@@ -84,13 +85,15 @@ vec3 gerstner(vec3 pos, inout vec3 normal)
 	return vec3(pos.x + steepness * amplitude*C*direction.x, amplitude*S, pos.z + steepness * amplitude*C*direction.y);*/
 }
 
-void EmitPoint(vec3 pos, vec3 offset)
+void EmitPoint(vec3 pos, vec3 offset, vec3 normal)
 {
 	/*float k = 2 * PI / wavelength;
 	float f = k * (pos.x - speed * time * 100);
 	pos.x += amplitude * cos(f);
 	pos.y = amplitude * sin(f);*/
-	vec3 new_pos = gerstner(pos, world_normal);
+	//vec3 new_pos = gerstner(pos, world_normal);
+	vec3 new_pos = pos;
+	world_normal = normal;
 	gl_Position = Projection * View * vec4(new_pos, 1.0);
 	world_position = new_pos;
 	EmitVertex();
@@ -118,13 +121,13 @@ void main()
 
 		//TODO modify the points so that the triangle shrinks relative to its center
 		f_color = g_color[0];
-		EmitPoint(p1, offset);
+		EmitPoint(p1, offset, w_normal[0]);
 
 		f_color = g_color[1];
-		EmitPoint(p2, offset);
+		EmitPoint(p2, offset, w_normal[1]);
 
 		f_color = g_color[2];
-		EmitPoint(p3, offset);
+		EmitPoint(p3, offset, w_normal[2]);
 
 		/*f_color = g_color[3];
 		EmitPoint(p4, offset);*/
