@@ -16,6 +16,7 @@ private:
 	void Update(float deltaTimeSeconds) override;
 	void FrameEnd() override;
 
+	unsigned int UploadCubeMapTexture(const std::string &posx, const std::string &posy, const std::string &posz, const std::string& negx, const std::string& negy, const std::string& negz);
 	void RenderMeshInstanced(Mesh *mesh, Shader *shader, const glm::mat4 &modelMatrix, Texture2D *texture);
 	void RenderWater(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture);
 
@@ -33,6 +34,7 @@ private:
 
 protected:
 	//informatii suprafata generate
+	int cubeMapTextureID;
 	float water_size = 10.0f;
 	glm::vec3 water_color = glm::vec3(0, 0.2f, 0.7f);
 	int waves_count = 5;
