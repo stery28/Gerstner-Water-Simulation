@@ -351,6 +351,7 @@ void Proiect::Update(float deltaTimeSeconds)
 	//Mesh* mesh = meshes["surface"];
 	//draw the object instanced
 	//RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	{
 		// Water texture
