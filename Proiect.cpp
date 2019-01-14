@@ -24,7 +24,7 @@ Proiect::~Proiect()
 void Proiect::Init()
 {
 	auto camera = GetSceneCamera();
-	camera->SetPositionAndRotation(glm::vec3(0, 10, 18), glm::quat(glm::vec3(-40 * TO_RADIANS, 0, 0)));
+	camera->SetPositionAndRotation(glm::vec3(0, 20, 48), glm::quat(glm::vec3(-40 * TO_RADIANS, 0, 0)));
 	// camera->SetPositionAndRotation(glm::vec3(0, 0, 25), glm::quat(glm::vec3(0)));
 	camera->Update();
 
@@ -106,11 +106,11 @@ void Proiect::Init()
 		meshes["water"]->UseMaterials(false);
 		//meshes["water"]->SetDrawMode(GL_TRIANGLES);
 
-		directions.push_back(glm::vec2(1, 0.5f));
-		wavelength.push_back(50.0f);
-		for (int i = 1; i < waves_count; i++) {
-			directions.push_back(glm::vec2(rand() % 21 / 10 - 1, rand() % 21 / 10 - 1));
-			wavelength.push_back(rand() % 40 + 10);
+		//directions.push_back(glm::vec2(1, 0.5f));
+		//wavelength.push_back(50.0f);
+		for (int i = 0; i < waves_count; i++) {
+			directions.push_back(glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10));
+			wavelength.push_back((float)(rand() % 40 + 10));
 		}
 	}
 
@@ -255,10 +255,16 @@ void Proiect::Update(float deltaTimeSeconds)
 		// RenderGround(meshes["water"], shaders["TextureShader"], glm::mat4(1), ground_texture);
 		//RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
 		glUniform1f(glGetUniformLocation(shader->program, "time"), delta_time);
-		glUniform1f(glGetUniformLocation(shader->program, "waves_count"), waves_count);
-		glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
-		glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
-		cout << delta_time<<endl;
+		glUniform1i(glGetUniformLocation(shader->program, "waves_count"), waves_count);
+		for (int i = 0; i < waves_count; i++)
+		{
+			glUniform2fv(glGetUniformLocation(shader->program, "directions"), 1, glm::value_ptr(directions[i]));
+			//glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), 1, &wavelength[i]);
+		}
+		glUniform1f(glGetUniformLocation(shader->program, "wavelength"), wavelength[0]);
+		//glUniform2fv(glGetUniformLocation(shader->program, "directions"), waves_count, glm::value_ptr(directions[0]));
+		//glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
+		cout << delta_time<< directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 	}
 
