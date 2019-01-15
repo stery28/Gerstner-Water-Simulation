@@ -6,12 +6,13 @@ uniform sampler2D texture_1;
 uniform samplerCube texture_cubemap;
 uniform vec3 camera_position;
 uniform vec3 light_position;
+uniform vec3 Color;
 
 in vec3 world_position;
 in vec3 world_normal;
 
 //const vec3 light_position = vec3(10, 7, 0);
-const vec3 light_color = vec3(0.1f);
+const vec3 light_color = vec3(0.5f);
 const float light_radius = 30.0f;
 
 layout(location = 0) out vec4 out_color;
@@ -21,7 +22,7 @@ const vec3 ld = vec3(0.3);	// Diffuse factor
 const vec3 ls = vec3(0.3);	// Specular factor
 const float specular_exponent = 40.0;	// Specular exponent
 const vec3 ambient = vec3(0.1f, 0.1f, 0.1f);
-const vec3 Color = vec3(0, 0.2f, 0.7f);
+//const vec3 Color = vec3(0, 0.2f, 0.7f);
 vec4 phong2() {
 	vec3 L = normalize(light_position - world_position);
 	vec3 N = world_normal;
@@ -77,15 +78,16 @@ vec4 phong(vec3 w_pos, vec3 w_N)
 
 	float factor;
 
-	vec3 diffuse = vec3(0, 0, 0);
-	vec3 specular = vec3(0, 0, 0);
-	int material_shininess = 1;
+	//vec3 diffuse = vec3(0, 0, 0);
+	vec3 diffuse = Color;
+	vec3 specular = vec3(0);
+	int material_shininess = 2;
 
 	float lighting = 0;
 	float diffuseFact, specularFact;
 
 	//vec3 tmp_color = ((factor + ka) * diffuse.xyz + factor * specular.xyz) * light_color;
-	vec3 tmp_color = vec3(0);
+	vec3 tmp_color = ambient;
 
 	L = normalize(light_position - w_pos);
 	V = normalize(camera_position - w_pos);
@@ -104,7 +106,7 @@ vec4 phong(vec3 w_pos, vec3 w_N)
 
 	tmp_color += ((diffuseFact + ka) * diffuse.xyz + specularFact * specular.xyz) * light_color * factor;
 
-	tmp_color += ((diffuseFact + ka) * kd + specularFact * ks) * light_color * factor * Color;
+	//tmp_color += ((diffuseFact + ka) * kd + specularFact * ks) * light_color * factor * Color;
 	return vec4(tmp_color, 1);
 }
 
@@ -112,12 +114,12 @@ void main()
 {
 	//out_color = vec4(f_color, 0);
 	//out_color = vec4(0, 0.2f, 0.7f, 0);
-	//out_color = phong(world_position, world_normal);
+	out_color = phong(world_position, world_normal);
 	//out_color = vec4(world_position, 1);
 
 
 	//out_color = phong2(); // Best one
-	out_color = vec4(world_normal, 1);
+	//out_color = vec4(world_normal, 1);
 
 	/*if (world_normal.xyz == vec3(0))
 		out_color = vec4(0, 1, 0, 1);*/
