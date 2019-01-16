@@ -65,6 +65,16 @@ void Proiect::Init()
 		shaders[shader->GetName()] = shader;
 	}
 
+	// Shader for objects with no texture, using Phong for illumination
+	{
+		Shader *shader = new Shader("ClassicShader");
+		shader->AddShader("Source/Teme/Proiect/Shaders/ClassicShader.VS.glsl", GL_VERTEX_SHADER);
+		shader->AddShader("Source/Teme/Proiect/Shaders/FragmentShader.glsl", GL_FRAGMENT_SHADER);
+
+		shader->CreateAndLink();
+		shaders[shader->GetName()] = shader;
+	}
+
 	cubeMapTextureID = UploadCubeMapTexture(
 		texturePath + "posx.png",
 		texturePath + "posy.png",
@@ -361,7 +371,10 @@ void Proiect::Update(float deltaTimeSeconds)
 	//Mesh* mesh = meshes["surface"];
 	//draw the object instanced
 	//RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (wireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	{
 		// Water texture
@@ -379,10 +392,22 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform1fv(glGetUniformLocation(shader->program, "wavelength"), waves_count, &wavelength[0]);
 		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
 		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
+		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(water_color));
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 		//RenderMesh(meshes["test"], shader, glm::mat4(1));
 		//RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
+	}
+
+	// Simple objects with no texture
+	{
+		shader = shaders["ClassicShader"];
+		shader->Use();
+		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
+		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
+		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(glm::vec3(0, 0.7f, 0)));
+		RenderMesh(meshes["test"], shader, glm::mat4(1));
+		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
 	}
 
 }
@@ -415,12 +440,22 @@ void Proiect::OnInputUpdate(float deltaTime, int mods)
 		if (window->KeyHold(GLFW_KEY_D)) {
 			light_position += glm::vec3(1, 0, 0) * deltaTime * speed;
 		}
+
+		if (window->KeyHold(GLFW_KEY_Q)) {
+			light_position -= glm::vec3(0, 1, 0) * deltaTime * speed;
+		}
+
+		if (window->KeyHold(GLFW_KEY_E)) {
+			light_position += glm::vec3(0, 1, 0) * deltaTime * speed;
+		}
 	}
 };
 
 void Proiect::OnKeyPress(int key, int mods)
 {
-	
+	if (key == GLFW_KEY_F) {
+		wireframe = !wireframe;
+	}
 };
 
 void Proiect::OnKeyRelease(int key, int mods)

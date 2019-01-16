@@ -37,7 +37,7 @@ protected:
 	int cubeMapTextureID;
 	float water_size = 10.0f;
 	glm::vec3 water_color = glm::vec3(0, 0.2f, 0.7f);
-	glm::vec3 light_position = glm::vec3(10, 7, 0);
+	glm::vec3 light_position = glm::vec3(0, 2, 0);
 	int waves_count = 5;
 	std::vector<glm::vec2> directions = std::vector<glm::vec2>();// = new std::vector<glm::vec2>();
 	std::vector<float> steepness = std::vector<float>();// = new std::vector<float>();
@@ -47,4 +47,5 @@ protected:
 	Texture2D *ground_texture;
 	Texture2D *river_texture;
 	float delta_time = 0.0f;
+	bool wireframe = false;
 };
