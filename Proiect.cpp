@@ -136,7 +136,8 @@ void Proiect::Init()
 		//meshes["test"]->InitFromData(vertices, indices);
 		meshes["test"]->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "box.obj");
 
-		meshes["water"]->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "plane50.obj");
+		//meshes["water"]->LoadMesh(RESOURCE_PATH::MODELS + "Primitives", "plane50.obj");
+		meshes["water"]->LoadMesh("Source/Teme/Proiect/Models", "plane100.obj");
 		meshes["water"]->UseMaterials(false);
 		//meshes["water"]->SetDrawMode(GL_TRIANGLES);
 

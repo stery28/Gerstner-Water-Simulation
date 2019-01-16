@@ -48,7 +48,7 @@ vec4 phong3(vec3 Color) {
 	V = normalize(camera_position - world_position);
 	H = normalize(L + V);
 	N = normalize(world_normal);
-	float ambient_strength = 0.1f;
+	float ambient_strength = 0.3f;
 	vec3 ambient = ambient_strength * light_color;
 	float diff = max(dot(N, L), 0.7f);
 	vec3 diffuse = diff * light_color;
