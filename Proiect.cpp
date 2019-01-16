@@ -394,6 +394,7 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
 		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(water_color));
+		glUniform1i(glGetUniformLocation(shader->program, "reflective"), 1);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureID);
@@ -413,6 +414,7 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
 		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(glm::vec3(0, 0.7f, 0)));
+		glUniform1i(glGetUniformLocation(shader->program, "reflective"), 0);
 		RenderMesh(meshes["test"], shader, glm::mat4(1));
 		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
 	}
