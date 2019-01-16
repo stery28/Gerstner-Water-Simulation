@@ -47,4 +47,5 @@ protected:
 	Texture2D *ground_texture;
 	Texture2D *river_texture;
 	float delta_time = 0.0f;
+	bool wireframe = false;
 };

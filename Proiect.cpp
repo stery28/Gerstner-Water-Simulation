@@ -371,7 +371,10 @@ void Proiect::Update(float deltaTimeSeconds)
 	//Mesh* mesh = meshes["surface"];
 	//draw the object instanced
 	//RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (wireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	{
 		// Water texture
@@ -450,7 +453,9 @@ void Proiect::OnInputUpdate(float deltaTime, int mods)
 
 void Proiect::OnKeyPress(int key, int mods)
 {
-	
+	if (key == GLFW_KEY_F) {
+		wireframe = !wireframe;
+	}
 };
 
 void Proiect::OnKeyRelease(int key, int mods)
