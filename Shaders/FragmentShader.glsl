@@ -23,7 +23,7 @@ const vec3 ls = vec3(0.3);	// Specular factor
 const float specular_exponent = 40.0;	// Specular exponent
 const vec3 ambient = vec3(0.1f, 0.1f, 0.1f);
 //const vec3 Color = vec3(0, 0.2f, 0.7f);
-vec4 phong2() {
+/*vec4 phong2() {
 	vec3 L = normalize(light_position - world_position);
 	vec3 N = world_normal;
 	vec3 V = normalize(camera_position - world_position);
@@ -40,64 +40,9 @@ vec4 phong2() {
 	}
 	//return vec4(f*(diffuse + specular), 1.0);
 	return vec4(max(intensity*diffuse + specular, ambient), 1.0f);
-}
-
-/*vec4 phong3() {
-	vec3 L, V, H;
-
-	float ka = 0.25, kd = 0.5, ks = 0.5;
-
-	float factor;
-
-	//vec3 diffuse = vec3(0, 0, 0);
-	vec3 diffuse = light_color;
-	vec3 specular = vec3(0);
-	vec3 ambiental = ka * light_color;
-	int material_shininess = 16;
-
-	float lighting = 0;
-	float diffuseFact, specularFact;
-
-	//vec3 tmp_color = ((factor + ka) * diffuse.xyz + factor * specular.xyz) * light_color;
-
-	L = normalize(light_position - w_pos);
-	V = normalize(camera_position - w_pos);
-	H = normalize(L + V);
-
-	diffuseFact = max(dot(N, L), 0.0f);
-	diffuse = diffuseFact * light_color;
-
 }*/
 
-/*vec4 phong(vec3 w_pos, vec3 w_N)
-{
-	vec3 L = normalize(light_position - w_pos);
-
-	float dist = distance(light_position, w_pos);
-
-	// TODO
-	// Ignore fragmets outside of the light influence zone (radius)
-	if (dist > light_radius)
-		return vec4(1);
-
-	float att = pow(light_radius - dist, 2);
-
-	float dot_specular = dot(w_N, L);
-	vec3 specular = vec3(0);
-	if (dot_specular > 0)
-	{
-		vec3 V = normalize(camera_position - w_pos);
-		vec3 H = normalize(L + V);
-		specular = ls * pow(max(dot(w_N, H), 0), specular_exponent);
-	}
-
-	vec3 diffuse = ld * max(dot_specular, 0);
-	//vec3 diffuse = vec3(0, 0.2f, 0.7f);
-
-	return vec4(att * (diffuse + specular), 1.0);
-}*/
-
-vec4 phong3() {
+vec4 phong3(vec3 Color) {
 	vec3 L, V, H, N;
 	L = normalize(light_position - world_position);
 	V = normalize(camera_position - world_position);
@@ -109,7 +54,7 @@ vec4 phong3() {
 	vec3 diffuse = diff * light_color;
 	float specular_strength = 0.5f;//0.5f;
 	vec3 R = reflect(-L, N);
-	float spec = pow(max(dot(V, R), 0.0f), 32);
+	float spec = pow(max(dot(V, R), 0.0f), 16);
 	vec3 specular = specular_strength * spec * light_color;
 	vec3 result = (ambient + diffuse + specular) * Color;
 	
@@ -119,7 +64,7 @@ vec4 phong3() {
 	return vec4(result, 1.0f);
 }
 
-vec4 phong(vec3 w_pos, vec3 w_N)
+/*vec4 phong(vec3 w_pos, vec3 w_N)
 {
 	vec3 L, V, H;
 
@@ -158,6 +103,16 @@ vec4 phong(vec3 w_pos, vec3 w_N)
 
 	//tmp_color += ((diffuseFact + ka) * kd + specularFact * ks) * light_color * factor * Color;
 	return vec4(tmp_color, 1);
+}*/
+
+vec3 myReflect()
+{
+	return reflect(world_position - camera_position, normalize(world_normal));
+}
+
+vec3 myRefract(float refractive_index)
+{
+	return refract(world_position - camera_position, normalize(world_normal), 1.0f / refractive_index);
 }
 
 void main()
@@ -165,9 +120,13 @@ void main()
 	//out_color = vec4(f_color, 0);
 	//out_color = vec4(0, 0.2f, 0.7f, 0);
 	//out_color = phong(world_position, normalize(world_normal)); //
-	out_color = phong3();
+	//out_color = phong3();
 	//out_color = vec4(world_position, 1);
 
+	vec4 reflect_color = texture(texture_cubemap, myReflect());
+	vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
+	vec4 fragment_color = mix(reflect_color, refract_color, 0.2f);
+	out_color = phong3(fragment_color.xyz);
 
 	//out_color = phong2(); // Best one
 	//out_color = vec4(normalize(world_normal), 1);

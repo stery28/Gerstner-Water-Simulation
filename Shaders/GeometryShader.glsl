@@ -75,7 +75,7 @@ vec3 gerstner(vec3 pos, inout vec3 normal)
 		);
 	}
 	//normal = normalize(cross(binormal, tangent));
-	normal = vec3(-normal.x, -normal.y, 1 - normal.z);
+	normal = normalize(vec3(-normal.x, -normal.y, 1 - normal.z));
 	return result_pos;
 	/*float dir = dot(pos.xz, direction);
 	float w = 2 * PI / wavelength;

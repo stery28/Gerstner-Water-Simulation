@@ -393,6 +393,12 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
 		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(water_color));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureID);
+		int loc_texture = shader->GetUniformLocation("texture_cubemap");
+		glUniform1i(loc_texture, 0);
+
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::mat4(1));
 		//RenderMesh(meshes["test"], shader, glm::mat4(1));
