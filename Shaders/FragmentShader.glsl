@@ -102,19 +102,19 @@ vec4 phong3() {
 	L = normalize(light_position - world_position);
 	V = normalize(camera_position - world_position);
 	H = normalize(L + V);
-	N = world_normal;
+	N = normalize(world_normal);
 	float ambient_strength = 0.1f;
 	vec3 ambient = ambient_strength * light_color;
 	float diff = max(dot(N, L), 0.7f);
 	vec3 diffuse = diff * light_color;
-	float specular_strength = 0;//0.5f;
+	float specular_strength = 0.5f;//0.5f;
 	vec3 R = reflect(-L, N);
 	float spec = pow(max(dot(V, R), 0.0f), 32);
 	vec3 specular = specular_strength * spec * light_color;
 	vec3 result = (ambient + diffuse + specular) * Color;
 	
-	if (diff == 0)
-		return vec4(0, 1, 0, 1.0f);
+	//if (diff == 0)
+		//return vec4(0, 1, 0, 1.0f);
 
 	return vec4(result, 1.0f);
 }
@@ -128,8 +128,8 @@ vec4 phong(vec3 w_pos, vec3 w_N)
 	float factor;
 
 	//vec3 diffuse = vec3(0, 0, 0);
-	vec3 diffuse = Color;
-	vec3 specular = vec3(0);
+	vec3 diffuse = light_color;
+	vec3 specular = light_color;
 	int material_shininess = 16;
 
 	float lighting = 0;
@@ -164,13 +164,13 @@ void main()
 {
 	//out_color = vec4(f_color, 0);
 	//out_color = vec4(0, 0.2f, 0.7f, 0);
-	//out_color = phong(world_position, world_normal); //
+	//out_color = phong(world_position, normalize(world_normal)); //
 	out_color = phong3();
 	//out_color = vec4(world_position, 1);
 
 
 	//out_color = phong2(); // Best one
-	//out_color = vec4(world_normal, 1);
+	//out_color = vec4(normalize(world_normal), 1);
 
 	/*if (world_normal.xyz == vec3(0))
 		out_color = vec4(0, 1, 0, 1);*/
