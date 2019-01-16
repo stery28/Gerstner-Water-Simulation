@@ -465,6 +465,19 @@ void Proiect::OnKeyPress(int key, int mods)
 	if (key == GLFW_KEY_F) {
 		wireframe = !wireframe;
 	}
+
+	if (key == GLFW_KEY_R) {
+		for (int i = 0; i < waves_count; i++) {
+			directions[i] = glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10);
+			if (directions[i][0] == 0 && directions[i][1] == 0) {
+				int index = rand() % 2;
+				while (directions[i][index] == 0) {
+					directions[i][index] = (float)(rand() % 10) / 10;
+				}
+			}
+			wavelength[i] = (float)(rand() % 10 + 1);
+		}
+	}
 };
 
 void Proiect::OnKeyRelease(int key, int mods)
