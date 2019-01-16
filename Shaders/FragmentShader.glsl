@@ -7,6 +7,7 @@ uniform samplerCube texture_cubemap;
 uniform vec3 camera_position;
 uniform vec3 light_position;
 uniform vec3 Color;
+uniform bool reflective;
 
 in vec3 world_position;
 in vec3 world_normal;
@@ -48,7 +49,7 @@ vec4 phong3(vec3 Color) {
 	V = normalize(camera_position - world_position);
 	H = normalize(L + V);
 	N = normalize(world_normal);
-	float ambient_strength = 0.1f;
+	float ambient_strength = 0.3f;
 	vec3 ambient = ambient_strength * light_color;
 	float diff = max(dot(N, L), 0.7f);
 	vec3 diffuse = diff * light_color;
@@ -122,13 +123,20 @@ void main()
 	//out_color = phong(world_position, normalize(world_normal)); //
 	//out_color = phong3();
 	//out_color = vec4(world_position, 1);
-
-	vec4 reflect_color = texture(texture_cubemap, myReflect());
-	vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
-	float refractive_factor = dot(normalize(camera_position - world_position), normalize(world_normal)); // Fresnel Effect
-	refractive_factor = pow(refractive_factor, 2.0f);
-	vec4 fragment_color = mix(reflect_color, refract_color, refractive_factor);
-	fragment_color = mix(fragment_color, vec4(Color, 1.0f), 0.4f);
+	vec4 fragment_color;
+	if (reflective)
+	{
+		vec4 reflect_color = texture(texture_cubemap, myReflect());
+		vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
+		float refractive_factor = dot(normalize(camera_position - world_position), normalize(world_normal)); // Fresnel Effect
+		refractive_factor = pow(refractive_factor, 2.0f);
+		fragment_color = mix(reflect_color, refract_color, refractive_factor);
+		fragment_color = mix(fragment_color, vec4(Color, 1.0f), 0.4f);
+	}
+	else 
+	{
+		fragment_color = vec4(Color, 1.0f);
+	}
 	out_color = phong3(fragment_color.xyz);
 
 	//out_color = phong2(); // Best one
