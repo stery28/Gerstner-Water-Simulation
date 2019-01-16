@@ -54,7 +54,7 @@ vec4 phong3(vec3 Color) {
 	vec3 diffuse = diff * light_color;
 	float specular_strength = 0.5f;//0.5f;
 	vec3 R = reflect(-L, N);
-	float spec = pow(max(dot(V, R), 0.0f), 16);
+	float spec = pow(max(dot(V, R), 0.0f), 32);
 	vec3 specular = specular_strength * spec * light_color;
 	vec3 result = (ambient + diffuse + specular) * Color;
 	
@@ -125,7 +125,8 @@ void main()
 
 	vec4 reflect_color = texture(texture_cubemap, myReflect());
 	vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
-	vec4 fragment_color = mix(reflect_color, refract_color, 0.2f);
+	vec4 fragment_color = mix(reflect_color, refract_color, 0.7f);
+	fragment_color = mix(fragment_color, vec4(Color, 1.0f), 0.4f);
 	out_color = phong3(fragment_color.xyz);
 
 	//out_color = phong2(); // Best one
