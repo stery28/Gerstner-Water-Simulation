@@ -2,15 +2,18 @@
 
 layout(location = 0) in vec3 f_color;
 
-uniform sampler2D texture_1;
+uniform sampler2D textureImage;
 uniform samplerCube texture_cubemap;
 uniform vec3 camera_position;
 uniform vec3 light_position;
 uniform vec3 Color;
+uniform int shininess;
 uniform bool reflective;
+uniform bool has_texture;
 
 in vec3 world_position;
 in vec3 world_normal;
+in vec2 texcoord;
 
 //const vec3 light_position = vec3(10, 7, 0);
 const vec3 light_color = vec3(0.5f);
@@ -55,7 +58,7 @@ vec4 phong3(vec3 Color) {
 	vec3 diffuse = diff * light_color;
 	float specular_strength = 0.5f;//0.5f;
 	vec3 R = reflect(-L, N);
-	float spec = pow(max(dot(V, R), 0.0f), 32);
+	float spec = pow(max(dot(V, R), 0.0f), shininess);
 	vec3 specular = specular_strength * spec * light_color;
 	vec3 result = (ambient + diffuse + specular) * Color;
 	
@@ -135,7 +138,14 @@ void main()
 	}
 	else 
 	{
-		fragment_color = vec4(Color, 1.0f);
+		if (has_texture)
+		{
+			fragment_color = texture2D(textureImage, texcoord);
+		}
+		else
+		{
+			fragment_color = vec4(Color, 1.0f);
+		}
 	}
 	out_color = phong3(fragment_color.xyz);
 

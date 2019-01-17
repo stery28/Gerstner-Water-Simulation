@@ -22,13 +22,15 @@ const float PI = 3.1415926;
 //const float wavelength = 50.0f;
 //const float speed = 0.2f;
 //const float amplitude = 5.0f;
-const float steepness = 0.5f;
+const float steepness = 0.3f;
 //const vec2 direction = vec2(1, 0.5f);
 
 // Fragment shader stuff for reflect/refract
 in vec3 w_normal[];
 out vec3 world_position;
 out vec3 world_normal;
+
+out vec2 texcoord; // Just because we use the same fragmentshader as ClassicShader.VS
 
 vec3 gerstner(vec3 pos, inout vec3 normal)
 {
@@ -121,12 +123,15 @@ void main()
 
 		//TODO modify the points so that the triangle shrinks relative to its center
 		f_color = g_color[0];
+		texcoord = vec2(0);
 		EmitPoint(p1, offset, w_normal[0]);
 
 		f_color = g_color[1];
+		texcoord = vec2(0);
 		EmitPoint(p2, offset, w_normal[1]);
 
 		f_color = g_color[2];
+		texcoord = vec2(0);
 		EmitPoint(p3, offset, w_normal[2]);
 
 		/*f_color = g_color[3];
