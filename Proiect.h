@@ -43,6 +43,7 @@ protected:
 	glm::vec4 reflection_clip_plane = glm::vec4(0, 1, 0, 0);
 	glm::vec4 refraction_clip_plane = glm::vec4(0, -1, 0, 0);
 	int waves_count = 5;
+	int max_waves_count = 10;
 	std::vector<glm::vec2> directions = std::vector<glm::vec2>();// = new std::vector<glm::vec2>();
 	std::vector<float> steepness = std::vector<float>();// = new std::vector<float>();
 	std::vector<float> wavelength = std::vector<float>();// = new std::vector<float>();
