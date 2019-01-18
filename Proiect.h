@@ -48,8 +48,9 @@ protected:
 	std::vector<float> wavelength = std::vector<float>();// = new std::vector<float>();
 	//TODO: Add multiple configs
 	// std::unordered_map<std::string, Texture2D*> mapTextures;
-	Texture2D *ground_texture;
-	Texture2D *river_texture;
+	Texture2D *dudv_texture;
+	float wave_speed = 0.03f;
+	float move_factor = 0;
 	float delta_time = 0.0f;
 	bool wireframe = false;
 

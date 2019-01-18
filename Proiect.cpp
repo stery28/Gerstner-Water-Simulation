@@ -5,6 +5,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stb/stb_image.h>
+#include <cmath>
 
 #include <Core/Engine.h>
 #include "Laboratoare/Laborator2/Laborator2.h"
@@ -191,8 +192,9 @@ void Proiect::Init()
 	}
 
 	{
-		// const string texture_loc = "Source/Teme/Proiect/Textures/";
+		const string texture_loc = "Source/Teme/Proiect/Textures/";
 		// Load texture
+		dudv_texture = TextureManager::LoadTexture(texture_loc + "dudv.png", nullptr, "dudv", true, true);
 		// ground_texture = TextureManager::LoadTexture(texture_loc + "dirt.jpg", nullptr, "ground", true, true);
 		// river_texture = TextureManager::LoadTexture(texture_loc + "river.jpg", nullptr, "river", true, true);
 		// ground_texture = TextureManager::LoadTexture(RESOURCE_PATH::TEXTURES + "ground.jpg", nullptr, "image", true, true);
@@ -416,6 +418,8 @@ void Proiect::Update(float deltaTimeSeconds)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	delta_time += deltaTimeSeconds;
+	move_factor += wave_speed * deltaTimeSeconds;
+	move_factor = fmod(move_factor, 10);
 
 	auto camera = GetSceneCamera();
 
@@ -581,6 +585,11 @@ void Proiect::Update(float deltaTimeSeconds)
 		fbo_reflection->BindTexture(0, GL_TEXTURE0 + 1);
 		glUniform1i(glGetUniformLocation(shader->program, "refraction_texture"), 2);
 		fbo_refraction->BindTexture(0, GL_TEXTURE0 + 2);
+
+		//glActiveTexture(GL_TEXTURE0 + 3);
+		dudv_texture->BindToTextureUnit(GL_TEXTURE0 + 3);
+		glUniform1i(glGetUniformLocation(shader->program, "dudv_texture"), 3);
+		glUniform1f(glGetUniformLocation(shader->program, "move_factor"), move_factor);
 
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::scale(glm::mat4(1), glm::vec3(0.4f)));

@@ -14,11 +14,13 @@ uniform bool has_texture;
 
 uniform sampler2D reflection_texture;
 uniform sampler2D refraction_texture;
+uniform sampler2D dudv_texture;
 
 in vec3 world_position;
 in vec3 world_normal;
 in vec2 texcoord;
 in vec4 clipSpace;
+uniform float move_factor;
 
 //const vec3 light_position = vec3(10, 7, 0);
 const vec3 light_color = vec3(0.5f);
@@ -137,6 +139,16 @@ void main()
 		vec2 ndc = (clipSpace.xy / clipSpace.w) / 2.0f + 0.5f;
 		vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
 		vec2 refractTexCoords = vec2(ndc.x, ndc.y);
+
+		vec2 distortion = (texture(dudv_texture, vec2(texcoord.x + move_factor, texcoord.y)).rg * 2.0f - 1.0f) * 0.02f;
+
+		reflectTexCoords += distortion;
+		reflectTexCoords.x = clamp(reflectTexCoords.x, 0.001, 0.999);
+		reflectTexCoords.y = clamp(reflectTexCoords.y, -0.999, -0.001);
+
+		refractTexCoords += distortion;
+		refractTexCoords = clamp(refractTexCoords, 0.001, 0.999);
+
 		//vec4 reflect_color = texture(texture_cubemap, myReflect());
 		vec4 reflect_color = texture(reflection_texture, reflectTexCoords);
 		vec4 refract_color = texture(refraction_texture, refractTexCoords);
