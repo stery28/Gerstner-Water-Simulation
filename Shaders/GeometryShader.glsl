@@ -27,10 +27,12 @@ const float steepness = 0.3f;
 
 // Fragment shader stuff for reflect/refract
 in vec3 w_normal[];
+in vec2 g_texcoord[];
 out vec3 world_position;
 out vec3 world_normal;
 
 out vec2 texcoord; // Just because we use the same fragmentshader as ClassicShader.VS
+out vec4 clipSpace;
 
 vec3 gerstner(vec3 pos, inout vec3 normal)
 {
@@ -93,10 +95,11 @@ void EmitPoint(vec3 pos, vec3 offset, vec3 normal)
 	float f = k * (pos.x - speed * time * 100);
 	pos.x += amplitude * cos(f);
 	pos.y = amplitude * sin(f);*/
-	vec3 new_pos = gerstner(pos, world_normal);
-	//vec3 new_pos = pos;
-	//world_normal = normal;
+	//vec3 new_pos = gerstner(pos, world_normal);
+	vec3 new_pos = pos;
+	world_normal = normal;
 	gl_Position = Projection * View * vec4(new_pos, 1.0);
+	clipSpace = gl_Position;
 	world_position = new_pos;
 	EmitVertex();
 }
@@ -123,15 +126,18 @@ void main()
 
 		//TODO modify the points so that the triangle shrinks relative to its center
 		f_color = g_color[0];
-		texcoord = vec2(0);
+		//texcoord = vec2(0);
+		texcoord = g_texcoord[0];
 		EmitPoint(p1, offset, w_normal[0]);
 
 		f_color = g_color[1];
-		texcoord = vec2(0);
+		//texcoord = vec2(0);
+		texcoord = g_texcoord[1];
 		EmitPoint(p2, offset, w_normal[1]);
 
 		f_color = g_color[2];
-		texcoord = vec2(0);
+		//texcoord = vec2(0);
+		texcoord = g_texcoord[2];
 		EmitPoint(p3, offset, w_normal[2]);
 
 		/*f_color = g_color[3];
