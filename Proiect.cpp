@@ -31,7 +31,7 @@ void Proiect::Init()
 	camera->Update();
 
 	srand(time(NULL));
-	std::string texturePath = RESOURCE_PATH::TEXTURES + "Cube/";
+	std::string texturePath = "Source/Teme/Proiect/Textures/Cubemap/";
 
 	ToggleGroundPlane();
 
@@ -86,12 +86,12 @@ void Proiect::Init()
 
 	{
 		// Water plane
-		vector<VertexFormat> vertices
+		vector<glm::vec3> vertices
 		{
-			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
-			VertexFormat(glm::vec3(water_size, 0, -water_size), water_color),
-			VertexFormat(glm::vec3(-water_size, 0, -water_size), water_color),
-			VertexFormat(glm::vec3(-water_size, 0, water_size), water_color)
+			glm::vec3(water_size, 0, water_size),// water_color),
+			glm::vec3(water_size, 0, -water_size),// water_color),
+			glm::vec3(-water_size, 0, -water_size),// water_color),
+			glm::vec3(-water_size, 0, water_size)// water_color)
 			/*VertexFormat(glm::vec3(2*water_size, 0, 2*water_size), water_color),
 			VertexFormat(glm::vec3(2*water_size, 0, water_size), water_color),
 			VertexFormat(glm::vec3(water_size, 0, water_size), water_color),
@@ -129,6 +129,8 @@ void Proiect::Init()
 			glm::vec2(1.0f, 1.0f),
 			glm::vec2(1.0f, 0.0f)*/
 		};
+		meshes["simple_plane"] = new Mesh("simple_plane"); // To map the reflection texture for testing purpose
+		meshes["simple_plane"]->InitFromData(vertices, normals, textureCoords, indices);
 
 		meshes["water"] = new Mesh("water");
 		meshes["test"] = new Mesh("test");
@@ -163,6 +165,13 @@ void Proiect::Init()
 		meshes[mesh->GetMeshID()] = mesh;
 	}
 
+	{
+		Mesh* mesh = new Mesh("scene");
+		mesh->LoadMesh("Source/Teme/Proiect/Models", "scene.obj");
+		mesh->UseMaterials(true);
+		meshes[mesh->GetMeshID()] = mesh;
+	}
+
 	// Create a bogus mesh with 2 points (a line)
 	{
 		vector<VertexFormat> vertices
@@ -193,6 +202,17 @@ void Proiect::Init()
 		// ground_texture->Load2D((texture_loc + "dirt.jpg").c_str(), GL_REPEAT);
 		// texture->Load2D((texture_loc + "dirt.jpg").c_str(), GL_REPEAT);
 		// mapTextures["ground"] = texture;
+	}
+
+
+	{
+		// FBOs for reflection and refraction
+		auto resolution = window->GetResolution();
+		fbo_reflection = new FrameBuffer();
+		fbo_reflection->Generate(resolution.x, resolution.y, 1);
+
+		fbo_refraction = new FrameBuffer();
+		fbo_refraction->Generate(resolution.x, resolution.y, 1);
 	}
 }
 
@@ -327,22 +347,16 @@ void Proiect::RenderWater(Mesh *mesh, Shader *shader, const glm::mat4 & modelMat
 }
 
 
-void Proiect::Update(float deltaTimeSeconds)
+void Proiect::RenderSkybox()
 {
-	ClearScreen();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	delta_time += deltaTimeSeconds;
-
 	auto camera = GetSceneCamera();
 
-	// draw the cubemap
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	{
 		Shader *shader = shaders["CubeMap"];
 		shader->Use();
 
-		glm::mat4 modelMatrix = glm::scale(glm::mat4(1), glm::vec3(30));
+		glm::mat4 modelMatrix = glm::scale(glm::mat4(1), glm::vec3(100));
 
 		glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 		glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
@@ -356,11 +370,90 @@ void Proiect::Update(float deltaTimeSeconds)
 		meshes["cube"]->Render();
 		//RenderMesh(meshes["cube"], shader, glm::mat4(1));
 	}
+}
 
-	Shader *shader = shaders["SurfaceGeneration"];
-	shader->Use();
+void Proiect::RenderEnvironment(glm::vec4 &clip_plane)
+{
+	auto camera = GetSceneCamera();
+	Shader *shader;
+
+	{
+		shader = shaders["ClassicShader"];
+		shader->Use();
+		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
+		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
+		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(glm::vec3(0, 0.7f, 0)));
+		glUniform1i(glGetUniformLocation(shader->program, "reflective"), 0);
+		glUniform4fv(glGetUniformLocation(shader->program, "clip_plane"), 1, glm::value_ptr(clip_plane));
+		RenderMesh(meshes["test"], shader, glm::mat4(1));
+		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
+	}
+
+	{
+		shader = shaders["ClassicShader"];
+		shader->Use();
+		glm::mat4 modelMatrix = glm::scale(glm::mat4(1), glm::vec3(0.4f));
+
+		glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(shader->loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+		glUniform1i(glGetUniformLocation(shader->program, "has_texture"), 1);
+		glUniform1i(glGetUniformLocation(shader->program, "shininess"), 1);
+
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(shader->program, "textureImage"), 0);
+
+		//meshes["scene"]->Render();
+		RenderMesh(meshes["scene"], shader, modelMatrix);
+		glUniform1i(glGetUniformLocation(shader->program, "has_texture"), 0);
+	}
+}
+
+
+void Proiect::Update(float deltaTimeSeconds)
+{
+	ClearScreen();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	delta_time += deltaTimeSeconds;
+
+	auto camera = GetSceneCamera();
+
+	float distance = 2 * (camera->transform->GetWorldPosition().y);
+	cout << distance << endl;
+	glm::vec3 camera_pos = camera->transform->GetWorldPosition();
+	camera_pos.y -= distance;
+	camera->transform->SetWorldPosition(camera_pos);
+	glm::vec3 camera_rotation = camera->transform->GetRotationEuler360();
+	camera_rotation.x = -camera_rotation.x;
+	camera->transform->SetWorldRotation(camera_rotation);
+	camera->Update();
+
+	// draw the cubemap
+	fbo_reflection->Bind();
+	RenderSkybox();
+	/*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	{
+		Shader *shader = shaders["CubeMap"];
+		shader->Use();
+
+		glm::mat4 modelMatrix = glm::scale(glm::mat4(1), glm::vec3(100));
+
+		glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(shader->loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureID);
+		int loc_texture = shader->GetUniformLocation("texture_cubemap");
+		glUniform1i(loc_texture, 0);
+
+		meshes["cube"]->Render();
+		//RenderMesh(meshes["cube"], shader, glm::mat4(1));
+	}*/
 
 	//send uniforms to shaders
+	Shader *shader;
 
 	//TODO 
 	//trimiteti la shadere numarul de puncte care aproximeaza o curba (no_of_generated_points)
@@ -372,12 +465,94 @@ void Proiect::Update(float deltaTimeSeconds)
 	//Mesh* mesh = meshes["surface"];
 	//draw the object instanced
 	//RenderMeshInstanced(mesh, shader, glm::mat4(1), river_texture);
+	
+
+	glEnable(GL_CLIP_DISTANCE0); // Clip plane for cutting scene for textures
+
+	//fbo_reflection->Bind();
+	RenderEnvironment(reflection_clip_plane);
+
+	// Simple objects with no texture
+	/*{
+		shader = shaders["ClassicShader"];
+		shader->Use();
+		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
+		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
+		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(glm::vec3(0, 0.7f, 0)));
+		glUniform1i(glGetUniformLocation(shader->program, "reflective"), 0);
+		glUniform4fv(glGetUniformLocation(shader->program, "clip_plane"), 1, glm::value_ptr(clip_plane));
+		RenderMesh(meshes["test"], shader, glm::mat4(1));
+		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
+	}*/
+
+	// Objects with texture
+	/*{
+		shader = shaders["ClassicShader"];
+		shader->Use();
+		glm::mat4 modelMatrix = glm::scale(glm::mat4(1), glm::vec3(0.4f));
+
+		glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(shader->loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+		glUniform1i(glGetUniformLocation(shader->program, "has_texture"), 1);
+		glUniform1i(glGetUniformLocation(shader->program, "shininess"), 1);
+
+		//meshes["scene"]->Render();
+		RenderMesh(meshes["scene"], shader, modelMatrix);
+		glUniform1i(glGetUniformLocation(shader->program, "has_texture"), 0);
+	}*/
+
+	camera_pos.y += distance;
+	camera->transform->SetWorldPosition(camera_pos);
+	camera_rotation.x = -camera_rotation.x;
+	camera->transform->SetWorldRotation(camera_rotation);
+	camera->Update();
+
+	cout << "--- " << camera_pos << endl;
+
+
+	glDisable(GL_CLIP_DISTANCE0);
+
+	//Refraction pass
+	fbo_refraction->Bind();
+	RenderSkybox();
+	glEnable(GL_CLIP_DISTANCE0);
+	RenderEnvironment(refraction_clip_plane);
+	glDisable(GL_CLIP_DISTANCE0);
+
+	FrameBuffer::BindDefault();
+	RenderSkybox();
+	RenderEnvironment(glm::vec4(0));
+
 	if (wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	/*{
+		// FBO texture test
+		shader = shaders["ClassicShader"];
+		shader->Use();
+		glm::mat4 modelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 5, 0));
 
+		glUniformMatrix4fv(shader->loc_model_matrix, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+		glUniformMatrix4fv(shader->loc_view_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(shader->loc_projection_matrix, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+		glUniform1i(glGetUniformLocation(shader->program, "has_texture"), 1);
+		glUniform1i(glGetUniformLocation(shader->program, "shininess"), 1);
+
+		//meshes["scene"]->Render();
+		//glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(shader->program, "textureImage"), 1);
+		fbo_reflection->BindTexture(0, GL_TEXTURE0 + 1);
+
+		RenderMesh(meshes["simple_plane"], shader, modelMatrix);
+		glUniform1i(glGetUniformLocation(shader->program, "has_texture"), 0);
+	}*/
+
+	// Render Water the last, because of the reflection/refraction textures
 	{
+		Shader *shader = shaders["SurfaceGeneration"];
+		shader->Use();
 		// Water texture
 		// RenderGround(meshes["water"], shaders["TextureShader"], glm::mat4(1), ground_texture);
 		//RenderMesh(meshes["water"], shaders["VertexColor"], glm::mat4(1));
@@ -395,29 +570,26 @@ void Proiect::Update(float deltaTimeSeconds)
 		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(water_color));
 		glUniform1i(glGetUniformLocation(shader->program, "reflective"), 1);
+		glUniform1i(glGetUniformLocation(shader->program, "shininess"), 32);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureID);
 		int loc_texture = shader->GetUniformLocation("texture_cubemap");
 		glUniform1i(loc_texture, 0);
 
+		glUniform1i(glGetUniformLocation(shader->program, "reflection_texture"), 1);
+		fbo_reflection->BindTexture(0, GL_TEXTURE0 + 1);
+		glUniform1i(glGetUniformLocation(shader->program, "refraction_texture"), 2);
+		fbo_refraction->BindTexture(0, GL_TEXTURE0 + 2);
+
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
-		RenderMesh(meshes["water"], shader, glm::mat4(1));
+		RenderMesh(meshes["water"], shader, glm::scale(glm::mat4(1), glm::vec3(0.4f)));
+		cout << meshes["water"]->texCoords[0] << " " << meshes["water"]->texCoords[1] << endl;
 		//RenderMesh(meshes["test"], shader, glm::mat4(1));
 		//RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
 	}
 
-	// Simple objects with no texture
-	{
-		shader = shaders["ClassicShader"];
-		shader->Use();
-		glUniform3fv(glGetUniformLocation(shader->program, "camera_position"), 1, glm::value_ptr(camera->transform->GetWorldPosition()));
-		glUniform3fv(glGetUniformLocation(shader->program, "light_position"), 1, glm::value_ptr(light_position));
-		glUniform3fv(glGetUniformLocation(shader->program, "Color"), 1, glm::value_ptr(glm::vec3(0, 0.7f, 0)));
-		glUniform1i(glGetUniformLocation(shader->program, "reflective"), 0);
-		RenderMesh(meshes["test"], shader, glm::mat4(1));
-		RenderMesh(meshes["sphere"], shader, glm::translate(glm::mat4(1), light_position));
-	}
+	
 
 }
 

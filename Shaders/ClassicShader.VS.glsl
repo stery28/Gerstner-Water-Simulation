@@ -20,13 +20,20 @@ uniform mat4 Projection;
 out vec3 world_position;
 out vec3 world_normal;
 
+uniform vec4 clip_plane;
+
 layout(location = 0) out vec3 f_color;
+out vec2 texcoord;
+out vec4 clipSpace;
 
 void main()
 {
 	f_color = v_color;
 	world_position = (Model * vec4(v_position, 1)).xyz;
 	world_normal = (Model * vec4(v_normal, 1)).xyz;
+	texcoord = v_texture_coord;
+
+	gl_ClipDistance[0] = dot(Model * vec4(v_position, 1), clip_plane);
 	/*vec3 pos = v_position;
 	float k = 2 * PI / wavelength;
 	float f = k * (pos.x - speed * time * 100);

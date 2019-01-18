@@ -2,15 +2,23 @@
 
 layout(location = 0) in vec3 f_color;
 
-uniform sampler2D texture_1;
+uniform sampler2D textureImage;
 uniform samplerCube texture_cubemap;
+
 uniform vec3 camera_position;
 uniform vec3 light_position;
 uniform vec3 Color;
+uniform int shininess;
 uniform bool reflective;
+uniform bool has_texture;
+
+uniform sampler2D reflection_texture;
+uniform sampler2D refraction_texture;
 
 in vec3 world_position;
 in vec3 world_normal;
+in vec2 texcoord;
+in vec4 clipSpace;
 
 //const vec3 light_position = vec3(10, 7, 0);
 const vec3 light_color = vec3(0.5f);
@@ -55,7 +63,7 @@ vec4 phong3(vec3 Color) {
 	vec3 diffuse = diff * light_color;
 	float specular_strength = 0.5f;//0.5f;
 	vec3 R = reflect(-L, N);
-	float spec = pow(max(dot(V, R), 0.0f), 32);
+	float spec = pow(max(dot(V, R), 0.0f), shininess);
 	vec3 specular = specular_strength * spec * light_color;
 	vec3 result = (ambient + diffuse + specular) * Color;
 	
@@ -126,18 +134,34 @@ void main()
 	vec4 fragment_color;
 	if (reflective)
 	{
-		vec4 reflect_color = texture(texture_cubemap, myReflect());
-		vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
+		vec2 ndc = (clipSpace.xy / clipSpace.w) / 2.0f + 0.5f;
+		vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
+		vec2 refractTexCoords = vec2(ndc.x, ndc.y);
+		//vec4 reflect_color = texture(texture_cubemap, myReflect());
+		vec4 reflect_color = texture(reflection_texture, reflectTexCoords);
+		vec4 refract_color = texture(refraction_texture, refractTexCoords);
+		//vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
 		float refractive_factor = dot(normalize(camera_position - world_position), normalize(world_normal)); // Fresnel Effect
-		refractive_factor = pow(refractive_factor, 2.0f);
+		refractive_factor = pow(refractive_factor, 4.0f);
 		fragment_color = mix(reflect_color, refract_color, refractive_factor);
 		fragment_color = mix(fragment_color, vec4(Color, 1.0f), 0.4f);
 	}
 	else 
 	{
-		fragment_color = vec4(Color, 1.0f);
+		if (has_texture)
+		{
+			fragment_color = texture2D(textureImage, texcoord);
+		}
+		else
+		{
+			fragment_color = vec4(Color, 1.0f);
+		}
 	}
 	out_color = phong3(fragment_color.xyz);
+
+	//out_color = texture(reflection_texture, texcoord);
+
+	//out_color = vec4(texcoord.xy, 0, 1.0f);
 
 	//out_color = phong2(); // Best one
 	//out_color = vec4(normalize(world_normal), 1);
