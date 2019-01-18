@@ -427,6 +427,7 @@ void Proiect::Update(float deltaTimeSeconds)
 	glm::vec3 camera_rotation = camera->transform->GetRotationEuler360();
 	camera_rotation.x = -camera_rotation.x;
 	camera->transform->SetWorldRotation(camera_rotation);
+	camera->Update();
 
 	// draw the cubemap
 	fbo_reflection->Bind();
@@ -505,6 +506,7 @@ void Proiect::Update(float deltaTimeSeconds)
 	camera->transform->SetWorldPosition(camera_pos);
 	camera_rotation.x = -camera_rotation.x;
 	camera->transform->SetWorldRotation(camera_rotation);
+	camera->Update();
 
 	cout << "--- " << camera_pos << endl;
 

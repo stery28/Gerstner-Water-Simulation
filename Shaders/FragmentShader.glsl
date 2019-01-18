@@ -142,7 +142,7 @@ void main()
 		vec4 refract_color = texture(refraction_texture, refractTexCoords);
 		//vec4 refract_color = texture(texture_cubemap, myRefract(1.33));
 		float refractive_factor = dot(normalize(camera_position - world_position), normalize(world_normal)); // Fresnel Effect
-		refractive_factor = pow(refractive_factor, 2.0f);
+		refractive_factor = pow(refractive_factor, 4.0f);
 		fragment_color = mix(reflect_color, refract_color, refractive_factor);
 		fragment_color = mix(fragment_color, vec4(Color, 1.0f), 0.4f);
 	}
