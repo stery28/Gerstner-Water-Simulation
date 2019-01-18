@@ -211,8 +211,8 @@ void Proiect::Init()
 		fbo_reflection = new FrameBuffer();
 		fbo_reflection->Generate(resolution.x, resolution.y, 1);
 
-		//fbo_refraction = new FrameBuffer();
-		//fbo_refraction->Generate(resolution.x, resolution.y, 1);
+		fbo_refraction = new FrameBuffer();
+		fbo_refraction->Generate(resolution.x, resolution.y, 1);
 	}
 }
 
@@ -512,11 +512,11 @@ void Proiect::Update(float deltaTimeSeconds)
 	glDisable(GL_CLIP_DISTANCE0);
 
 	//Refraction pass
-	/*fbo_refraction->Bind();
+	fbo_refraction->Bind();
 	RenderSkybox();
 	glEnable(GL_CLIP_DISTANCE0);
 	RenderEnvironment(refraction_clip_plane);
-	glDisable(GL_CLIP_DISTANCE0);*/
+	glDisable(GL_CLIP_DISTANCE0);
 
 	FrameBuffer::BindDefault();
 	RenderSkybox();
@@ -577,8 +577,8 @@ void Proiect::Update(float deltaTimeSeconds)
 
 		glUniform1i(glGetUniformLocation(shader->program, "reflection_texture"), 1);
 		fbo_reflection->BindTexture(0, GL_TEXTURE0 + 1);
-		//glUniform1i(glGetUniformLocation(shader->program, "refraction_texture"), 2);
-		//fbo_refraction->BindTexture(0, GL_TEXTURE0 + 2);
+		glUniform1i(glGetUniformLocation(shader->program, "refraction_texture"), 2);
+		fbo_refraction->BindTexture(0, GL_TEXTURE0 + 2);
 
 		cout << delta_time << directions[0] << directions[1] << wavelength[0] << endl;
 		RenderMesh(meshes["water"], shader, glm::scale(glm::mat4(1), glm::vec3(0.4f)));
