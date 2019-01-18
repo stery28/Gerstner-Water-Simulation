@@ -20,7 +20,7 @@ private:
 	void RenderMeshInstanced(Mesh *mesh, Shader *shader, const glm::mat4 &modelMatrix, Texture2D *texture);
 	void RenderWater(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture);
 	void RenderSkybox();
-	void RenderEnvironment(glm::vec3 clip_plane);
+	void RenderEnvironment(glm::vec4 &clip_plane);
 
 	void OnInputUpdate(float deltaTime, int mods) override;
 	void OnKeyPress(int key, int mods) override;

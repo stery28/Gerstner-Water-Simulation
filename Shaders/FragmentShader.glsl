@@ -13,7 +13,7 @@ uniform bool reflective;
 uniform bool has_texture;
 
 uniform sampler2D reflection_texture;
-uniform sampler2D refraction_texture;
+//uniform sampler2D refraction_texture;
 
 in vec3 world_position;
 in vec3 world_normal;
@@ -136,7 +136,7 @@ void main()
 	{
 		vec2 ndc = (clipSpace.xy / clipSpace.w) / 2.0f + 0.5f;
 		vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
-		vec2 refractTexCoords = vec2(ndc.x, ndc.y);
+		//vec2 refractTexCoords = vec2(ndc.x, ndc.y);
 		//vec4 reflect_color = texture(texture_cubemap, myReflect());
 		vec4 reflect_color = texture(reflection_texture, reflectTexCoords);
 		//vec4 refract_color = texture(refraction_texture, refractTexCoords);

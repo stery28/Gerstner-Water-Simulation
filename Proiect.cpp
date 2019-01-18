@@ -211,8 +211,8 @@ void Proiect::Init()
 		fbo_reflection = new FrameBuffer();
 		fbo_reflection->Generate(resolution.x, resolution.y, 1);
 
-		fbo_refraction = new FrameBuffer();
-		fbo_refraction->Generate(resolution.x, resolution.y, 1);
+		//fbo_refraction = new FrameBuffer();
+		//fbo_refraction->Generate(resolution.x, resolution.y, 1);
 	}
 }
 
@@ -372,7 +372,7 @@ void Proiect::RenderSkybox()
 	}
 }
 
-void Proiect::RenderEnvironment(glm::vec3 clip_plane)
+void Proiect::RenderEnvironment(glm::vec4 &clip_plane)
 {
 	auto camera = GetSceneCamera();
 	Shader *shader;
@@ -520,7 +520,7 @@ void Proiect::Update(float deltaTimeSeconds)
 
 	FrameBuffer::BindDefault();
 	RenderSkybox();
-	RenderEnvironment(glm::vec3(0));
+	RenderEnvironment(glm::vec4(0));
 
 	if (wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
