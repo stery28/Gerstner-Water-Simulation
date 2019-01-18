@@ -16,8 +16,11 @@ private:
 	void Update(float deltaTimeSeconds) override;
 	void FrameEnd() override;
 
+	unsigned int UploadCubeMapTexture(const std::string &posx, const std::string &posy, const std::string &posz, const std::string& negx, const std::string& negy, const std::string& negz);
 	void RenderMeshInstanced(Mesh *mesh, Shader *shader, const glm::mat4 &modelMatrix, Texture2D *texture);
 	void RenderWater(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, Texture2D* texture);
+	void RenderSkybox();
+	void RenderEnvironment(glm::vec4 &clip_plane);
 
 	void OnInputUpdate(float deltaTime, int mods) override;
 	void OnKeyPress(int key, int mods) override;
@@ -33,15 +36,24 @@ private:
 
 protected:
 	//informatii suprafata generate
+	int cubeMapTextureID;
 	float water_size = 10.0f;
 	glm::vec3 water_color = glm::vec3(0, 0.2f, 0.7f);
+	glm::vec3 light_position = glm::vec3(0, 12, 0);
+	glm::vec4 reflection_clip_plane = glm::vec4(0, 1, 0, 0);
+	glm::vec4 refraction_clip_plane = glm::vec4(0, -1, 0, 0);
 	int waves_count = 5;
 	std::vector<glm::vec2> directions = std::vector<glm::vec2>();// = new std::vector<glm::vec2>();
 	std::vector<float> steepness = std::vector<float>();// = new std::vector<float>();
 	std::vector<float> wavelength = std::vector<float>();// = new std::vector<float>();
 	//TODO: Add multiple configs
 	// std::unordered_map<std::string, Texture2D*> mapTextures;
-	Texture2D *ground_texture;
-	Texture2D *river_texture;
+	Texture2D *dudv_texture;
+	float wave_speed = 0.03f;
+	float move_factor = 0;
 	float delta_time = 0.0f;
+	bool wireframe = false;
+
+	FrameBuffer *fbo_reflection;
+	FrameBuffer *fbo_refraction;
 };
