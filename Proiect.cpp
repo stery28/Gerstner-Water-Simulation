@@ -146,7 +146,7 @@ void Proiect::Init()
 
 		//directions.push_back(glm::vec2(1, 0.5f));
 		//wavelength.push_back(50.0f);
-		for (int i = 0; i < waves_count; i++) {
+		for (int i = 0; i < max_waves_count; i++) {
 			directions.push_back(glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10));
 			wavelength.push_back((float)(rand() % 10 + 1));
 		}
@@ -648,7 +648,7 @@ void Proiect::OnKeyPress(int key, int mods)
 	}
 
 	if (key == GLFW_KEY_R) {
-		for (int i = 0; i < waves_count; i++) {
+		for (int i = 0; i < max_waves_count; i++) {
 			directions[i] = glm::vec2((float)(rand() % 10) / 10, (float)(rand() % 10) / 10);
 			if (directions[i][0] == 0 && directions[i][1] == 0) {
 				int index = rand() % 2;
@@ -657,6 +657,20 @@ void Proiect::OnKeyPress(int key, int mods)
 				}
 			}
 			wavelength[i] = (float)(rand() % 10 + 1);
+		}
+	}
+
+	if (key == GLFW_KEY_KP_8) {
+		if (waves_count < max_waves_count)
+		{
+			waves_count++;
+		}
+	}
+
+	if (key == GLFW_KEY_KP_2) {
+		if (waves_count > 0)
+		{
+			waves_count--;
 		}
 	}
 };
